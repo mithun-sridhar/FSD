@@ -1,4 +1,7 @@
 import random
+import re
+import json
+
 class Student:
   def __init__(self, name, email, password):
     self.name = name
@@ -12,10 +15,12 @@ class Student:
     return student_id.zfill(6)
 
   def is_valid_email(self, email):
-    return email.endswith("@university.com") and ("@" in email) and ("." in email)
+    return bool(email.endswith("@university.com") and ("@" in email) and ("." in email))
 
   def is_valid_password(self, password):
-    return  len(password) >= 5
+
+    return bool(re.match( r"^[A-Z].{4,}[0-9]{3}$", password))
+    #return password.isupper() and len(password) >= 5 and all(char.isdigit() for char in password[-3:])
 
   def register(self, name, email, password):
     if self.is_valid_email(email) and self.is_valid_password(password):
@@ -27,6 +32,7 @@ class Student:
       return True
     else:
       return False
+
 
 class Subject:
   def __init__(self):
@@ -45,7 +51,7 @@ class Subject:
       return "D"
     else:
       return "HD"
-import json
+
 
 def load_students():
   try:
@@ -186,6 +192,7 @@ def admin_menu(students):
       return
     else:
       print("Invalid choice!")
+
 
 def register_student():
   name = input("Enter your name: ")
