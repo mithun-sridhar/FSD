@@ -2,8 +2,6 @@ import random
 import re
 import json
 
-# adding a test comment
-
 class Student:
   def __init__(self, name, email, password):
     self.name = name
@@ -17,7 +15,7 @@ class Student:
     return student_id.zfill(6)
 
   def is_valid_email(self, email):
-    return email.endswith("@university.com") and ("@" in email) and ("." in email)
+    return bool(email.endswith("@university.com") and ("@" in email) and ("." in email))
 
   def is_valid_password(self, password):
     return bool(re.match( r"^[A-Z].{4,}[0-9]{3}$", password))
@@ -50,7 +48,7 @@ class Subject:
       return "D"
     else:
       return "HD"
-
+    
 
 def load_students():
   try:
@@ -70,6 +68,8 @@ def save_students(students):
   data = [{"name": s.name, "email": s.email, "password": s.password, "enrolled_subjects": [{ "mark": subj.mark, "grade": subj.grade } for subj in s.enrolled_subjects]} for s in students]
   with open("students.data", "w") as file:
     json.dump(data, file)
+
+
 def student_login(students):
   email = input("Enter email: ")
   password = input("Enter password: ")
