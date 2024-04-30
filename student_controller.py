@@ -49,20 +49,23 @@ class Subject:
     else:
       return "HD"
     
-
 def load_students():
-  try:
-    with open("students.data", "r") as file:
-      data = json.load(file)
-      students = [Student(d["name"], d["email"], ["password"]) for d in data]
-      for student in students:
-        student.enrolled_subjects = [Subject() for _ in range(len(["enrolled_subjects"]))]
-        for i, subject in enumerate(["enrolled_subjects"]):
-          student.enrolled_subjects[i].mark = subject["mark"]
-          student.enrolled_subjects[i].grade = subject["grade"]
-      return students
-  except FileNotFoundError:
-    return []
+    try:
+        with open("students.data", "r") as file:
+            data = json.load(file)
+            students = []
+            for d in data:
+                student = Student(d["name"], d["email"], d["password"])
+                student.enrolled_subjects = []
+                for subject_data in d["enrolled_subjects"]:
+                    subject = Subject()
+                    subject.mark = subject_data["mark"]
+                    subject.grade = subject_data["grade"]
+                    student.enrolled_subjects.append(subject)
+                students.append(student)
+        return students
+    except FileNotFoundError:
+        return []
 
 def save_students(students):
   data = [{"name": s.name, "email": s.email, "password": s.password, "enrolled_subjects": [{ "mark": subj.mark, "grade": subj.grade } for subj in s.enrolled_subjects]} for s in students]
