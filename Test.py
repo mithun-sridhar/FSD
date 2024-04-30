@@ -19,7 +19,7 @@ class Student:
 
   def is_valid_password(self, password):
     return bool(re.match( r"^[A-Z].{4,}[0-9]{3}$", password))
-    #return password.isupper() and len(password) >= 5 and all(char.isdigit() for char in password[-3:])
+    return password.isupper() and len(password) >= 5 and all(char.isdigit() for char in password[-3:])
 
   def register(self, name, email, password):
     if self.is_valid_email(email) and self.is_valid_password(password):
