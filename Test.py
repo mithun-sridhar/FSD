@@ -17,6 +17,17 @@ class Student:
   def is_valid_password(self, password):
     return password.isupper()[0] and len(password) >= 5 and all(char.isdigit() for char in password[-3:])
 
+  def register(self, name, email, password):
+    if self.is_valid_email(email) and self.is_valid_password(password):
+      self.name = name
+      self.email = email
+      self.password = password
+      self.id = self.generate_id()
+      self.enrolled_subjects = []
+      return True
+    else:
+      return False
+
 class Subject:
   def __init__(self):
     self.id = str(random.randint(1, 999)).zfill(3)
@@ -40,7 +51,7 @@ def load_students():
   try:
     with open("students.data", "r") as file:
       data = json.load(file)
-      students = [Student(d["name"], d["email"], d["password"]) for d in data]
+      students = [Student(d["name"], d["email"], ["password"]) for d in data]
       for student in students:
         student.enrolled_subjects = [Subject() for _ in range(len(["enrolled_subjects"]))]
         for i, subject in enumerate(["enrolled_subjects"]):
@@ -176,6 +187,16 @@ def admin_menu(students):
     else:
       print("Invalid choice!")
 
+def register_student():
+  name = input("Enter your name: ")
+  email = input("Enter your email: ")
+  password = input("Enter your password: ")
+  new_student = Student(None, None, None)  # Create empty student object
+  if new_student.register(name, email, password):
+    return new_student
+  else:
+    print("Registration failed! Please check your email and password format.")
+
 def main():
   students = load_students()
 
@@ -183,9 +204,9 @@ def main():
     print("\nCLIUniApp - University Enrolment System")
     print("1. Login as Student")
     print("2. Login as Admin")
-    print("3. Exit")
+    print("3. Register as Student")
+    print("4. Exit")
     choice = input("Enter your choice: ")
-
     if choice == "1":
       student = student_login(students)
       if student:
@@ -195,6 +216,12 @@ def main():
       admin_menu(students)
       save_students(students)
     elif choice == "3":
+      new_student = register_student()
+      if new_student:
+        students.append(new_student)
+        save_students(students)
+        print("Registration successful! Please login to proceed.")
+    elif choice == "4":
       print("Exiting CLIUniApp!")
       break
     else:
@@ -202,4 +229,3 @@ def main():
 
 if __name__ == "__main__":
   main()
-
