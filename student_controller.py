@@ -1,4 +1,5 @@
 import random
+import re
 class Student:
   def __init__(self, name, email, password):
     self.name = name
