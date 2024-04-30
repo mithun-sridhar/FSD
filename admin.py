@@ -31,3 +31,11 @@ class Admin:
     def remove_student():
         ...
 
+    def help(self):
+        print("Menu options")
+        print("(c) clear database file")
+        print("(g) group students")
+        print("(p) partition students")
+        print("(s) show the students from the data file")
+        print("(x) exit")
+
