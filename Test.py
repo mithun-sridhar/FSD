@@ -15,7 +15,7 @@ class Student:
     return email.endswith("@university.com") and ("@" in email) and ("." in email)
 
   def is_valid_password(self, password):
-    return password.isupper()[0] and len(password) >= 5 and all(char.isdigit() for char in password[-3:])
+    return  len(password) >= 5
 
   def register(self, name, email, password):
     if self.is_valid_email(email) and self.is_valid_password(password):
