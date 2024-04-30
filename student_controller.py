@@ -1,5 +1,7 @@
 import random
 import re
+import json
+
 class Student:
   def __init__(self, name, email, password):
     self.name = name
@@ -46,7 +48,7 @@ class Subject:
       return "D"
     else:
       return "HD"
-import json
+
 
 def load_students():
   try:
