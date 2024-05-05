@@ -102,9 +102,9 @@ class Database:
 
 
   def save_students(self, students):
-    data = [{"id": s.id, "first_name": s.first_name, "last_name": s.last_name, "email": s.email, "password": s.password, "enrolled_subjects": [{ "mark": subj.mark, "grade": subj.grade } for subj in s.enrolled_subjects]} for s in students]
+    data = [{"id": s.id, "first_name": s.first_name, "last_name": s.last_name, "email": s.email, "password": s.password, "enrolled_subjects": [{ "subject_id": subj.id, "mark": subj.mark, "grade": subj.grade } for subj in s.enrolled_subjects]} for s in students]
     with open("students.data", "w") as file:
-      json.dump(data, file)
+      json.dump(data, file, indent=4)
 
 
 class UniAppSystem:
@@ -261,7 +261,7 @@ class UniAppSystem:
             print("\n")
             print(f"Subjects with grade {grade}:")
             for subject in subjects:
-                print(f"Student: {student['first_name']} {student['last_name']}, Email: {student['email']}, Subject Mark: {subject['mark']}")
+                print(f"Student: {student['first_name']} {student['last_name']}, Email: {student['email']}, Subject: {subject['subject_id']}, Subject Mark: {subject['mark']}")
 
 
   def partition_pass_fail(self):
@@ -286,7 +286,9 @@ class UniAppSystem:
     student_names = set()
 
     for student in passed_students:
-        name = f"{student['first_name']} {student['last_name']}"
+        total_marks = sum(subject["mark"] for subject in student["enrolled_subjects"])
+        average_score = total_marks / len(student["enrolled_subjects"]) if student["enrolled_subjects"] else 0
+        name = f"ID: {student['id']} {student['first_name']} {student['last_name']}, GPA: {average_score}"
         student_names.add(name)
 
     # Print each unique student name
@@ -298,12 +300,11 @@ class UniAppSystem:
     student_names = set()
 
     for student in failed_students:
-        name = f"{student['first_name']} {student['last_name']}"
+        total_marks = sum(subject["mark"] for subject in student["enrolled_subjects"])
+        average_score = total_marks / len(student["enrolled_subjects"]) if student["enrolled_subjects"] else 0
+        name = f"ID: {student['id']} {student['first_name']} {student['last_name']}, GPA: {average_score}"
         student_names.add(name)
 
-  
-
- 
 
   def admin_menu(self, students):
         while True:
@@ -334,24 +335,30 @@ class UniAppSystem:
                 # remove a student
                 case 'r':
                     email = input("Enter student email to remove: ")
-                    found = False
-                    for i, student in enumerate(students):
-                        if student.email == email:
-                            students.pop(i)
-                            found = True
-                            print("Student removed!")
-                            break
-                    if not found:
-                        print("Student not found!")
+                    try:
+                      with open("students.data", "r") as file:
+                          data = json.load(file)
+                      
+                      updated_data = [student for student in data if student["email"] != email]
+
+                      with open("students.data", "w") as file:
+                          json.dump(updated_data, file, indent=4)
+                      print(f"Entry for student with email '{email}' deleted successfully.")
+                    except FileNotFoundError:
+                        print("File 'students.data' not found.")
+                    except Exception as e:
+                        print(f"An error occurred: {e}")
 
                 # clear all student data
                 case 'c':
                     confirmation = input("Are you sure you want to clear all student data? (y/n): ")
                     if confirmation.lower() == "y":
-                        students.clear()
+                      try:
+                        with open("students.data", "w") as file:
+                            json.dump([], file)
                         print("All student data cleared!")
-                    else:
-                        print("Data clearing canceled.")
+                      except FileNotFoundError:
+                        print("Unable to clear student data.")
 
                 #exit admin system, return to main menu
                 case 'x':
