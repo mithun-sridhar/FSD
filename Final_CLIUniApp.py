@@ -240,19 +240,17 @@ class UniAppSystem:
                 print("Invalid choice, please try again.")
 
           
-  def group_by_grade(self):
+  def group_by_grade(self, students):
 
-    with open('students.data', 'r') as file:
-        data = json.load(file)
     
     subjects_by_grade = []
 
     subjects_by_grade = {"HD": [], "D": [], "C": [], "P": [], "Z": []}
 
     # Group subjects by grade
-    for student in data:
-        for subject in student["enrolled_subjects"]:
-            grade = subject["grade"]
+    for student in students:
+        for subject in student.enrolled_subjects:
+            grade = subject.grade
             subjects_by_grade[grade].append(subject)
 
     # Print subjects grouped by grade
@@ -261,20 +259,17 @@ class UniAppSystem:
             print("\n")
             print(f"Subjects with grade {grade}:")
             for subject in subjects:
-                print(f"Student: {student['first_name']} {student['last_name']}, Email: {student['email']}, Subject: {subject['subject_id']}, Subject Mark: {subject['mark']}")
+                print(f"Student: {student.first_name} {student.last_name}, Email: {student.email}, Subject: {subject.id}, Subject Mark: {subject.mark}")
 
 
-  def partition_pass_fail(self):
-     
-    with open('students.data', 'r') as file:
-      data = json.load(file)
+  def partition_pass_fail(self, students):
 
     passed_students = []
     failed_students = []
 
-    for student in data:
-        total_marks = sum(subject["mark"] for subject in student["enrolled_subjects"])
-        average_score = total_marks / len(student["enrolled_subjects"]) if student["enrolled_subjects"] else 0
+    for student in students:
+        total_marks = sum(subject.mark for subject in student.enrolled_subjects)
+        average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
 
         if average_score >= 50:
             passed_students.append(student)
@@ -286,9 +281,9 @@ class UniAppSystem:
     student_names = set()
 
     for student in passed_students:
-        total_marks = sum(subject["mark"] for subject in student["enrolled_subjects"])
-        average_score = total_marks / len(student["enrolled_subjects"]) if student["enrolled_subjects"] else 0
-        name = f"ID: {student['id']} {student['first_name']} {student['last_name']}, GPA: {average_score}"
+        total_marks = sum(subject.mark for subject in student.enrolled_subjects)
+        average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
+        name = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
         student_names.add(name)
 
     # Print each unique student name
@@ -300,9 +295,9 @@ class UniAppSystem:
     student_names = set()
 
     for student in failed_students:
-        total_marks = sum(subject["mark"] for subject in student["enrolled_subjects"])
-        average_score = total_marks / len(student["enrolled_subjects"]) if student["enrolled_subjects"] else 0
-        name = f"ID: {student['id']} {student['first_name']} {student['last_name']}, GPA: {average_score}"
+        total_marks = sum(subject.mark for subject in student.enrolled_subjects)
+        average_score = total_marks / len(student["enrolled_subjects"]) if student.enrolled_subjects else 0
+        name = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
         student_names.add(name)
 
 
@@ -326,28 +321,26 @@ class UniAppSystem:
 
                 # group students by grade
                 case 'g':
-                    self.group_by_grade()
+                    self.group_by_grade(students)
 
                 # partition students by pass/fail category
                 case 'p':
-                    self.partition_pass_fail()
+                    self.partition_pass_fail(students)
 
                 # remove a student
                 case 'r':
                     email = input("Enter student email to remove: ")
-                    try:
-                      with open("students.data", "r") as file:
-                          data = json.load(file)
-                      
-                      updated_data = [student for student in data if student["email"] != email]
+                    # Search for the entry corresponding to the provided email
+                    for student in students:
+                        if student.email == email:
+                            # Remove the corresponding entry from the list
+                            students.remove(student)
+                            print(f"Student with email '{email}' removed successfully.")
+                            break
+                    else:
+                        print(f"Student with email '{email}' not found.")
 
-                      with open("students.data", "w") as file:
-                          json.dump(updated_data, file, indent=4)
-                      print(f"Entry for student with email '{email}' deleted successfully.")
-                    except FileNotFoundError:
-                        print("File 'students.data' not found.")
-                    except Exception as e:
-                        print(f"An error occurred: {e}")
+              
 
                 # clear all student data
                 case 'c':
