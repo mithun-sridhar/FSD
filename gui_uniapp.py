@@ -181,7 +181,6 @@ class UniAppSystem:
         register_button.grid(row=4, columnspan=2)
 
 
-
 # questionable
     def exit_menu(self):
         self.root.destroy()
@@ -384,3 +383,4 @@ class UniAppSystem:
 root = tk.Tk()
 app = UniAppSystem(root)
 root.mainloop()
+root.
