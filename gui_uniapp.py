@@ -96,6 +96,7 @@ class UniAppSystem:
         self.root = root
         self.database = Database()
         self.students = self.database.load_students()
+        self.logged_in_student = None
         self.main_menu()
     
 
@@ -114,8 +115,9 @@ class UniAppSystem:
         if email and password:
             student = self.student_login(email.lower(), password)
             if student:
+                self.logged_in_student = student # Store the logged-in student
                 messagebox.showinfo("Success", "Login successful. Transferring to student course menu.")
-                self.student_course_menu(student)
+                self.student_course_menu()
                 self.database.save_students(self.students)
             else:
                 messagebox.showerror("Error", "Login unsuccessful, please try again.")
@@ -126,52 +128,57 @@ class UniAppSystem:
         register_student_window = tk.Toplevel(self.root)
         register_student_window.title("Registration Page")
 
-        first_name = entry_first_name.get().capitalize()
-        last_name = entry_last_name.get().capitalize()
-        email = entry_email.get().lower()
-        password = entry_password.get().strip()
 
-        students = self.database.load_students()
-
-        if new_student:
-            students_data = self.database.load_students()
-            new_student_email = new_student.email
-
-        # Check if the student's email is already in the database before adding them in
-        email_exists = any(student.email == new_student_email for student in students_data)
-        if email_exists == False:
-            self.students.append(new_student)
-            self.database.save_students(students)
-            print("Registration successful! Please login to proceed.")
-        else:
-            print(f"Student already exists.")
-                    
-    
-        # Create labels and entry fields for user input
-        label_first_name = tk.Label(root, text="First Name:")
+         # Create labels and entry fields for user input
+        label_first_name = tk.Label(register_student_window, text="First Name:")
         label_first_name.grid(row=0, column=0, sticky="e")
-        entry_first_name = tk.Entry(root)
+        entry_first_name = tk.Entry(register_student_window)
         entry_first_name.grid(row=0, column=1)
 
-        label_last_name = tk.Label(root, text="Last Name:")
+        label_last_name = tk.Label(register_student_window, text="Last Name:")
         label_last_name.grid(row=1, column=0, sticky="e")
-        entry_last_name = tk.Entry(root)
+        entry_last_name = tk.Entry(register_student_window)
         entry_last_name.grid(row=1, column=1)
 
-        label_email = tk.Label(root, text="Email:")
+        label_email = tk.Label(register_student_window, text="Email:")
         label_email.grid(row=2, column=0, sticky="e")
-        entry_email = tk.Entry(root)
+        entry_email = tk.Entry(register_student_window)
         entry_email.grid(row=2, column=1)
 
-        label_password = tk.Label(root, text="Password:")
+        label_password = tk.Label(register_student_window, text="Password:")
         label_password.grid(row=3, column=0, sticky="e")
-        entry_password = tk.Entry(root, show="*")
+        entry_password = tk.Entry(register_student_window, show="*")
         entry_password.grid(row=3, column=1)
 
-        # Button to trigger registration
-        register_button = tk.Button(root, text="Register", command=Database.register_student)
-        register_button.grid(row=4, columnspan=2)
+        
+        def register_student():
+        # Retrieve values from entry fields
+            first_name = entry_first_name.get().capitalize()
+            last_name = entry_last_name.get().capitalize()
+            email = entry_email.get().lower()
+            password = entry_password.get().strip()
 
+            # Check if the student's email is already in the database before adding them in
+            students_data = self.database.load_students()
+            new_student_email = email
+            email_exists = any(student.email == new_student_email for student in students_data)
+
+            if not email_exists:
+                # Register the student
+                new_student = self.database.register_student(first_name, last_name, email, password)
+                if new_student:
+                    self.students.append(new_student)
+                    self.database.save_students(self.students)
+                    messagebox.showinfo("Success", "Registration successful! Please login to proceed.")
+                    register_student_window.destroy()
+                else:
+                    messagebox.showerror("Error", "Registration unsuccessful. Please check your input.")
+            else:
+                messagebox.showerror("Error", "Student already exists.")
+
+    # Button to trigger registration
+        register_button = tk.Button(register_student_window, text="Register", command=register_student)
+        register_button.grid(row=4, columnspan=2)
 
 
 
@@ -199,14 +206,15 @@ class UniAppSystem:
 
     
     def enroll_subject(self, student):
-        if len(student.enrolled_subjects) < 4:
+        if self.logged_in_student and len(self.logged_in_student.enrolled_subjects) < 4:
             subject_enrolled = Subject()
-            student.enrolled_subjects.append(subject_enrolled)
+            student.enrolled_subjects.append(subject_enrolled)  
             num_enrolled = len(student.enrolled_subjects)
-            messagebox.showinfo(f"Enrolled successfully into subject {subject_enrolled.id}")
-            messagebox.showinfo(f"You are now enrolled in {num_enrolled} out of 4 subjects.")
+            messagebox.showinfo("Enrolled successfully", f"Enrolled successfully into subject {subject_enrolled.id}. You are now enrolled in {num_enrolled} out of 4 subjects.")
+        elif not self.logged_in_student:
+            messagebox.showerror("Error", "No student logged in.")
         else:
-            messagebox.showinfo("Maximum enrolment reached (4 subjects)")
+            messagebox.showinfo("Maximum enrolment reached", "Maximum enrolment reached (4 subjects).")
 
     def remove_subject(self, student):
         if student.enrolled_subjects:
@@ -223,6 +231,7 @@ class UniAppSystem:
         else:
             messagebox.showinfo("No subjects enrolled!")
 
+            
     def change_password(self, student):
         while True:
             new_password = input("Enter new password: ")
@@ -242,17 +251,15 @@ class UniAppSystem:
     def logout(self):
         messagebox.showinfo("Info", "Logout functionality is not implemented yet.")
 
-    def student_course_menu(self, email, password):
+    def student_course_menu(self):
         student_course_menu_window = tk.Toplevel(self.root)
         student_course_menu_window.title("Student Menu")
 
-        student = self.student_login(self, email, password, self.students)
-
         tk.Label(student_course_menu_window, text="Student Course Menu").pack()
-        tk.Button(student_course_menu_window, text="Enrol into a subject", command=self.enroll_subject).pack()
-        tk.Button(student_course_menu_window, text="Remove a subject from enrolment", command=self.remove_subject).pack()
-        tk.Button(student_course_menu_window, text="Show current enrolment", command=self.show_enrolment).pack()
-        tk.Button(student_course_menu_window, text="Change password", command=self.change_password).pack()
+        tk.Button(student_course_menu_window, text="Enrol into a subject", command=lambda: self.enroll_subject(self.logged_in_student)).pack()
+        tk.Button(student_course_menu_window, text="Remove a subject from enrolment", command=lambda: self.remove_subject(self.logged_in_student)).pack()
+        tk.Button(student_course_menu_window, text="Show current enrolment", command=lambda: self.show_enrolment(self.logged_in_student)).pack()
+        tk.Button(student_course_menu_window, text="Change password", command=lambda: self.change_password(self.logged_in_student)).pack()
         tk.Button(student_course_menu_window, text="Logout", command=self.logout).pack()
 
 
@@ -292,7 +299,6 @@ class UniAppSystem:
     def partition_students(self):
         partition_window = tk.Toplevel(self.root)
         partition_window.title("Partition Students by PASS/FAIL Category")
-
 
         passed_students = []
         failed_students = []
