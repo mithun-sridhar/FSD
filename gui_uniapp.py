@@ -116,7 +116,6 @@ class UniAppSystem:
             student = self.student_login(email.lower(), password)
             if student:
                 self.logged_in_student = student # Store the logged-in student
-                messagebox.showinfo("Success", "Login successful. Transferring to student course menu.")
                 self.student_course_menu()
                 self.database.save_students(self.students)
             else:
@@ -218,9 +217,10 @@ class UniAppSystem:
     def remove_subject(self, student):
         if student.enrolled_subjects:
             subject_removed = student.enrolled_subjects.pop()
-            messagebox.showinfo(f"Subject {subject_removed.id} removed!")
+            messagebox.showinfo("Success", f"Subject {subject_removed.id} removed!")
+            self.show_enrolment(student) # Update enrolment display after removal
         else:
-            messagebox.showinfo("No subjects enrolled!")
+            messagebox.showinfo("Info", "No subjects enrolled!")  # Show message if no subjects are enrolled
 
     def show_enrolment(self, student):
         if student.enrolled_subjects:
@@ -248,7 +248,7 @@ class UniAppSystem:
             messagebox.showinfo("Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits.")
 
     def logout(self):
-        messagebox.showinfo("Info", "Logout functionality is not implemented yet.")
+        self.root.deiconify()
 
     def student_course_menu(self):
         student_course_menu_window = tk.Toplevel(self.root)
