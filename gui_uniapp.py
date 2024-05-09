@@ -1,8 +1,9 @@
+import tkinter as tk
+from tkinter import messagebox, simpledialog
 import random
 import re
 import json
-import tkinter as tk
-from tkinter import messagebox, simpledialog
+
 
 class Student:
     def __init__(self, first_name, last_name, email, password):
@@ -33,28 +34,29 @@ class Student:
             return True
         else:
             if not self.is_valid_email(email):
-                messagebox.showerror("Error", "Email format incorrect. Please ensure it is in the following format: first.last@university.com")
+                messagebox.showerror("Error", "Email format incorrect. Please ensure it is in the following format: firstname.lastname@university.com")
             if not self.is_valid_password(password):
-                messagebox.showerror("Error", "Password does not meet requirements. Please ensure it is 6 characters long, starts with a letter, and ends with three digits.")
+                messagebox.showerror("Error", "Password does not meet requirements. Please ensure it has: 6 characters; starts with an uppercase letter, and ends with three digits.")
             return False
-        
-class Subject:
-  def __init__(self):
-    self.id = str(random.randint(1, 999)).zfill(3)
-    self.mark = random.randint(25, 100)
-    self.grade = self.calculate_grade()
 
-  def calculate_grade(self):
-    if self.mark < 50:
-      return "Z"
-    elif self.mark < 65:
-      return "P"
-    elif self.mark < 75:
-      return "C"
-    elif self.mark < 85:
-      return "D"
-    else:
-      return "HD"
+
+class Subject:
+    def __init__(self):
+        self.id = str(random.randint(1, 999)).zfill(3)
+        self.mark = random.randint(25, 100)
+        self.grade = self.calculate_grade()
+
+    def calculate_grade(self):
+        if self.mark < 50:
+            return "Z"
+        elif self.mark < 65:
+            return "P"
+        elif self.mark < 75:
+            return "C"
+        elif self.mark < 85:
+            return "D"
+        else:
+            return "HD"
 
 
 class Database:
@@ -90,7 +92,6 @@ class Database:
             json.dump(data, file)
 
 
-
 class UniAppSystem:
     def __init__(self, root):
         self.root = root
@@ -98,16 +99,14 @@ class UniAppSystem:
         self.students = self.database.load_students()
         self.logged_in_student = None
         self.main_menu()
-    
 
     def student_login(self, email, password):
-    # Iterate through each student's data in the file
+        # Iterate through each student's data in the file
         for student in self.students:
             # Check if the email and password match
             if student.email == email and student.password == password:
                 return student  # Credentials match
         return None  # No match found
-    
 
     def login_case(self):
         email = simpledialog.askstring("Login", "Enter email:")
@@ -115,20 +114,17 @@ class UniAppSystem:
         if email and password:
             student = self.student_login(email.lower(), password)
             if student:
-                self.logged_in_student = student # Store the logged-in student
+                self.logged_in_student = student  # Store the logged-in student
                 self.student_course_menu()
                 self.database.save_students(self.students)
             else:
                 messagebox.showerror("Error", "Login unsuccessful, please try again.")
-    
-
 
     def register_student_window(self):
         register_student_window = tk.Toplevel(self.root)
         register_student_window.title("Registration Page")
 
-
-         # Create labels and entry fields for user input
+        # Create labels and entry fields for user input
         label_first_name = tk.Label(register_student_window, text="First Name:")
         label_first_name.grid(row=0, column=0, sticky="e")
         entry_first_name = tk.Entry(register_student_window)
@@ -149,9 +145,8 @@ class UniAppSystem:
         entry_password = tk.Entry(register_student_window, show="*")
         entry_password.grid(row=3, column=1)
 
-        
         def register_student():
-        # Retrieve values from entry fields
+            # Retrieve values from entry fields
             first_name = entry_first_name.get().capitalize()
             last_name = entry_last_name.get().capitalize()
             email = entry_email.get().lower()
@@ -175,38 +170,53 @@ class UniAppSystem:
             else:
                 messagebox.showerror("Error", "Student already exists.")
 
-    # Button to trigger registration
+        # Button to trigger registration
         register_button = tk.Button(register_student_window, text="Register", command=register_student)
         register_button.grid(row=4, columnspan=2)
 
-
-# questionable
     def exit_menu(self):
-        self.root.destroy()
+        if hasattr(self, 'student_menu_window') and self.student_menu_window.winfo_exists():
+            self.student_menu_window.destroy()
 
 
     def main_menu(self):
         self.root.title("GUIUniApp - University Enrolment System")
-        tk.Label(self.root, text="Welcome to CLIUniApp", font=("Arial", 16)).pack(pady=20)
+        tk.Label(self.root, text="Welcome to UniApp", font=("Arial", 16)).pack(pady=20)
         tk.Button(self.root, text="Student System", command=self.student_menu).pack(pady=10)
         tk.Button(self.root, text="Admin System", command=self.admin_menu).pack(pady=10)
         tk.Button(self.root, text="Exit", command=self.root.quit).pack(pady=10)
 
-
     def student_menu(self):
         student_menu_window = tk.Toplevel(self.root)
         student_menu_window.title("Student Menu")
+        student_menu_window.geometry("600x400")
+        student_menu_window.configure(bg="#f0f0f0")  # Set background color
 
-        tk.Label(student_menu_window, text="Student Menu", font=("Arial", 16)).pack(pady=20)
-        tk.Button(student_menu_window, text="Login as student", command=self.login_case).pack()
-        tk.Button(student_menu_window, text="Register as student", command=self.register_student_window).pack()
-        tk.Button(student_menu_window, text="Exit", command=self.exit_menu).pack()
+        # Modern style for labels and buttons
+        label_font = ("Arial", 16)
+        button_font = ("Arial", 12, "bold")
 
-    
+        tk.Label(student_menu_window, text="Student Menu", font=label_font, bg="#f0f0f0").pack(pady=20)
+
+        # Login button
+        login_button = tk.Button(student_menu_window, text="Login as student", command=self.login_case, font=button_font, bg="#4CAF50", fg="white")
+        login_button.config(width=20)
+        login_button.pack(pady=10)
+
+        # Register button
+        register_button = tk.Button(student_menu_window, text="Register as student", command=self.register_student_window, font=button_font, bg="#008CBA", fg="white")
+        register_button.config(width=20)
+        register_button.pack(pady=10)
+
+        # Exit button
+        exit_button = tk.Button(student_menu_window, text="Exit", command=self.exit_menu, font=button_font, bg="#f44336", fg="white")
+        exit_button.config(width=20)
+        exit_button.pack(pady=10)
+
     def enroll_subject(self, student):
         if self.logged_in_student and len(self.logged_in_student.enrolled_subjects) < 4:
             subject_enrolled = Subject()
-            student.enrolled_subjects.append(subject_enrolled)  
+            student.enrolled_subjects.append(subject_enrolled)
             num_enrolled = len(student.enrolled_subjects)
             messagebox.showinfo("Enrolled successfully", f"Enrolled successfully into subject {subject_enrolled.id}. You are now enrolled in {num_enrolled} out of 4 subjects.")
         elif not self.logged_in_student:
@@ -216,39 +226,47 @@ class UniAppSystem:
 
     def remove_subject(self, student):
         if student.enrolled_subjects:
-            subject_removed = student.enrolled_subjects.pop()
-            messagebox.showinfo("Success", f"Subject {subject_removed.id} removed!")
-            self.show_enrolment(student) # Update enrolment display after removal
+            subject_options = [subject.id for subject in student.enrolled_subjects]
+            selected_subject = simpledialog.askstring("Remove Subject", f"Select subject to remove: {subject_options}")
+            if selected_subject in subject_options:
+                student.enrolled_subjects = [subject for subject in student.enrolled_subjects if subject.id != selected_subject]
+                messagebox.showinfo("Subject Removed", f"Subject {selected_subject} successfully removed.")
+            else:
+                messagebox.showerror("Error", "Invalid subject selection.")
         else:
-            messagebox.showinfo("Info", "No subjects enrolled!")  # Show message if no subjects are enrolled
+            messagebox.showinfo("No subjects enrolled!", "No subjects enrolled!")
 
     def show_enrolment(self, student):
         if student.enrolled_subjects:
-            messagebox.showinfo("\nEnrolled Subjects:")
+            enrolment_info = "\nEnrolled Subjects:\n"
             for i, subject in enumerate(student.enrolled_subjects):
-                messagebox.showinfo(f"{i+1}. Subject ID: {subject.id}, Mark: {subject.mark}, Grade: {subject.grade}")
+                enrolment_info += f"{i+1}. Subject ID: {subject.id}, Mark: {subject.mark}, Grade: {subject.grade}\n"
+            messagebox.showinfo("Current Enrolment", enrolment_info)
         else:
-            messagebox.showinfo("No subjects enrolled!")
+            messagebox.showinfo("No subjects enrolled!", "No subjects enrolled!")
 
-            
     def change_password(self, student):
-        while True:
-            new_password = input("Enter new password: ")
-            confirm_password = input("Confirm password: ")
-            if new_password != confirm_password:
-                messagebox.showinfo("Passwords do not match, please try again.")
-                continue
-            else:
-                break
+        new_password = simpledialog.askstring("Change Password", "Enter new password:")
+        confirm_password = simpledialog.askstring("Change Password", "Confirm password:")
+        if new_password != confirm_password:
+            messagebox.showinfo("Passwords do not match, please try again.")
+            return
         if student.is_valid_password(new_password):
             student.password = new_password
-            messagebox.showinfo("Password changed successfully!")
+            centered_message = "\n".join(["" * 10 + line for line in "Password changed successfully!".split("\n")])
+            messagebox.showinfo("Success", centered_message)
+           
         else:
-            messagebox.showinfo("Invalid password format! Please try again.")
-            messagebox.showinfo("Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits.")
+            invalid_message = "Invalid password format! Please try again."
+            note_message = "Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits."
+            centered_invalid_message = "\n".join(["" * 10 + line for line in invalid_message.split("\n")])
+            centered_note_message = "\n".join(["" * 10 + line for line in note_message.split("\n")])
+            messagebox.showinfo("Error", centered_invalid_message)
+            messagebox.showinfo("Note", centered_note_message)
 
     def logout(self):
-        self.root.deiconify()
+        parent_window = self.root.master if self.root.master else self.root
+        self.root.destroy()  # Hide the current window
 
     def student_course_menu(self):
         student_course_menu_window = tk.Toplevel(self.root)
@@ -261,6 +279,16 @@ class UniAppSystem:
         tk.Button(student_course_menu_window, text="Change password", command=lambda: self.change_password(self.logged_in_student)).pack()
         tk.Button(student_course_menu_window, text="Logout", command=self.logout).pack()
 
+    def admin_menu(self):
+        admin_menu_window = tk.Toplevel(self.root)
+        admin_menu_window.title("Admin Menu")
+
+        tk.Button(admin_menu_window, text="Show all students", command=self.show_all_students).pack(pady=5)
+        tk.Button(admin_menu_window, text="Group students by grade", command=self.group_students_by_grade).pack(pady=5)
+        tk.Button(admin_menu_window, text="Partition students by PASS/FAIL category", command=self.partition_students).pack(pady=5)
+        tk.Button(admin_menu_window, text="Remove a student", command=self.remove_student).pack(pady=5)
+        tk.Button(admin_menu_window, text="Clear all student data", command=self.clear_students_window).pack(pady=5)
+        tk.Button(admin_menu_window, text="Exit", command=admin_menu_window.destroy).pack(pady=5)
 
     def show_all_students(self):
         all_students_window = tk.Toplevel(self.root)
@@ -275,9 +303,6 @@ class UniAppSystem:
     def group_students_by_grade(self):
         group_by_grade_window = tk.Toplevel(self.root)
         group_by_grade_window.title("Group Students by Grade")
-
-        
-        subjects_by_grade = []
 
         subjects_by_grade = {"HD": [], "D": [], "C": [], "P": [], "Z": []}
 
@@ -347,8 +372,6 @@ class UniAppSystem:
 
         tk.Button(remove_student_window, text="Remove", command=remove).pack(pady=5)
 
-
-
     def clear_students_window(self):
 
         clear_students_window = tk.Toplevel(self.root)
@@ -366,20 +389,7 @@ class UniAppSystem:
                 messagebox.showerror("Error", f"An error occurred: {e}")
 
 
-    def admin_menu(self):
-
-        admin_menu_window = tk.Toplevel(self.root)
-        admin_menu_window.title("Admin Menu")
-        
-        tk.Button(admin_menu_window, text="Show all students", command=self.show_all_students).pack(pady=5)
-        tk.Button(admin_menu_window, text="Group students by grade", command=self.group_students_by_grade).pack(pady=5)
-        tk.Button(admin_menu_window, text="Partition students by PASS/FAIL category", command=self.partition_students).pack(pady=5)
-        tk.Button(admin_menu_window, text="Remove a student", command=self.remove_student).pack(pady=5)
-        tk.Button(admin_menu_window, text="Clear all student data", command=self.clear_students_window).pack(pady=5)
-        tk.Button(admin_menu_window, text="Exit", command=admin_menu_window.destroy).pack(pady=5)
-
-       
-
 root = tk.Tk()
 app = UniAppSystem(root)
 root.mainloop()
+
