@@ -6,7 +6,7 @@ import json
 
 
 class Student:
-    def _init_(self, first_name, last_name, email, password):
+    def __init__(self, first_name, last_name, email, password):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
@@ -41,7 +41,7 @@ class Student:
 
 
 class Subject:
-    def _init_(self):
+    def __init__(self):
         self.id = str(random.randint(1, 999)).zfill(3)
         self.mark = random.randint(25, 100)
         self.grade = self.calculate_grade()
@@ -93,7 +93,7 @@ class Database:
 
 
 class UniAppSystem:
-    def _init_(self, root):
+    def __init__(self, root):
         self.root = root
         self.database = Database()
         self.students = self.database.load_students()
