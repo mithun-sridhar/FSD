@@ -268,6 +268,7 @@ class UniAppSystem:
         parent_window = self.root.master if self.root.master else self.root
         self.root.destroy()  # Hide the current window
 
+
     def logout(self):
         self.logged_in_student = None
         self.root.destroy()
