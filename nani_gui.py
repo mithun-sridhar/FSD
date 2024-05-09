@@ -253,10 +253,16 @@ class UniAppSystem:
             return
         if student.is_valid_password(new_password):
             student.password = new_password
-            messagebox.showinfo("Password changed successfully!")
+            centered_message = "\n".join([" " * 10 + line for line in "Password changed successfully!".split("\n")])
+            messagebox.showinfo("Success", centered_message)
+           
         else:
-            messagebox.showinfo("Invalid password format! Please try again.")
-            messagebox.showinfo("Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits.")
+            invalid_message = "Invalid password format! Please try again."
+            note_message = "Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits."
+            centered_invalid_message = "\n".join([" " * 10 + line for line in invalid_message.split("\n")])
+            centered_note_message = "\n".join(["" * 10 + line for line in note_message.split("\n")])
+            messagebox.showinfo("Error", centered_invalid_message)
+            messagebox.showinfo("Note", centered_note_message)
 
     def logout(self):
         parent_window = self.root.master if self.root.master else self.root
