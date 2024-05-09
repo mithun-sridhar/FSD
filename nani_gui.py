@@ -388,5 +388,5 @@ class UniAppSystem:
 
 root = tk.Tk()
 app = UniAppSystem(root)
-root.mainloop().
+root.mainloop()
 
