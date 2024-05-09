@@ -265,8 +265,11 @@ class UniAppSystem:
             messagebox.showinfo("Note", centered_note_message)
 
     def logout(self):
-        parent_window = self.root.master if self.root.master else self.root
-        self.root.destroy()  # Hide the current window
+        self.logged_in_student = None
+        self.root.destroy()
+        self.root = tk.Tk()
+        app = UniAppSystem(self.root)
+        self.root.mainloop()
 
     def student_course_menu(self):
         student_course_menu_window = tk.Toplevel(self.root)
@@ -392,4 +395,3 @@ class UniAppSystem:
 root = tk.Tk()
 app = UniAppSystem(root)
 root.mainloop()
-

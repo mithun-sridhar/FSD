@@ -268,6 +268,13 @@ class UniAppSystem:
         parent_window = self.root.master if self.root.master else self.root
         self.root.destroy()  # Hide the current window
 
+    def logout(self):
+        self.logged_in_student = None
+        self.root.destroy()
+        self.root = tk.Tk()
+        app = UniAppSystem(self.root)
+        self.root.mainloop()
+
     def student_course_menu(self):
         student_course_menu_window = tk.Toplevel(self.root)
         student_course_menu_window.title("Student Menu")
