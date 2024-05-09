@@ -246,14 +246,11 @@ class UniAppSystem:
             messagebox.showinfo("No subjects enrolled!", "No subjects enrolled!")
 
     def change_password(self, student):
-        while True:
-            new_password = input("Enter new password: ")
-            confirm_password = input("Confirm password: ")
-            if new_password != confirm_password:
-                messagebox.showinfo("Passwords do not match, please try again.")
-                continue
-            else:
-                break
+        new_password = simpledialog.askstring("Change Password", "Enter new password:")
+        confirm_password = simpledialog.askstring("Change Password", "Confirm password:")
+        if new_password != confirm_password:
+            messagebox.showinfo("Passwords do not match, please try again.")
+            return
         if student.is_valid_password(new_password):
             student.password = new_password
             messagebox.showinfo("Password changed successfully!")
