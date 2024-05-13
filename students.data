@@ -1,1 +1,1 @@
-[{"id": "320364", "first_name": "Niramon ", "last_name": "Kitrattanasak", "email": "niramon@university.com", "password": "Niramon123", "enrolled_subjects": []}]
+[{"id": "499590", "first_name": "Niramon ", "last_name": "Kitrattanasak", "email": "niramon@university.com", "password": "Niramon123", "enrolled_subjects": [{"subject_id": "486", "mark": 68, "grade": "C"}, {"subject_id": "823", "mark": 93, "grade": "HD"}, {"subject_id": "124", "mark": 60, "grade": "P"}]}]

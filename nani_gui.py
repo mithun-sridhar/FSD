@@ -70,6 +70,7 @@ class Database:
                     student.enrolled_subjects = []
                     for subject_data in d["enrolled_subjects"]:
                         subject = Subject()
+                        subject.id = subject_data["subject_id"]
                         subject.mark = subject_data["mark"]
                         subject.grade = subject_data["grade"]
                         student.enrolled_subjects.append(subject)
@@ -117,6 +118,7 @@ class UniAppSystem:
                 self.logged_in_student = student  # Store the logged-in student
                 self.student_course_menu()
                 self.database.save_students(self.students)
+                return self.logged_in_student
             else:
                 messagebox.showerror("Error", "Login unsuccessful, please try again.")
 
@@ -181,10 +183,24 @@ class UniAppSystem:
 
     def main_menu(self):
         self.root.title("GUIUniApp - University Enrolment System")
+        self.root.geometry("600x400")
+        self.root.configure(bg='#f0f0f0')
+
+        # Modern style for buttons
+        button_font = ("Arial", 12, "bold")
+
         tk.Label(self.root, text="Welcome to UniApp", font=("Arial", 16)).pack(pady=20)
-        tk.Button(self.root, text="Student System", command=self.student_menu).pack(pady=10)
-        tk.Button(self.root, text="Admin System", command=self.admin_menu).pack(pady=10)
-        tk.Button(self.root, text="Exit", command=self.root.quit).pack(pady=10)
+        tk.Button(self.root, text="Student System", command=self.student_menu, font=button_font, bg="#ccd5ae", fg="white").pack(pady=10)
+        tk.Button(self.root, text="Admin System", command=self.admin_menu, font=button_font, bg="#ccd5ae", fg="white").pack(pady=10)
+        tk.Button(self.root, text="Exit", command=self.root.quit, font=button_font, bg="#ccd5ae", fg="white").pack(pady=10)
+
+
+    def exit_menu(self):
+        self.root.destroy()
+        self.root = tk.Tk()
+        app = UniAppSystem(self.root)
+        self.root.mainloop()
+
 
     def student_menu(self):
         student_menu_window = tk.Toplevel(self.root)
@@ -213,24 +229,28 @@ class UniAppSystem:
         exit_button.config(width=20)
         exit_button.pack(pady=10)
 
+
     def enroll_subject(self, student):
         if self.logged_in_student and len(self.logged_in_student.enrolled_subjects) < 4:
             subject_enrolled = Subject()
-            student.enrolled_subjects.append(subject_enrolled)
-            num_enrolled = len(student.enrolled_subjects)
+            self.logged_in_student.enrolled_subjects.append(subject_enrolled)
+            num_enrolled = len(self.logged_in_student.enrolled_subjects)
             messagebox.showinfo("Enrolled successfully", f"Enrolled successfully into subject {subject_enrolled.id}. You are now enrolled in {num_enrolled} out of 4 subjects.")
+            self.database.save_students(self.students)
         elif not self.logged_in_student:
             messagebox.showerror("Error", "No student logged in.")
         else:
             messagebox.showinfo("Maximum enrolment reached", "Maximum enrolment reached (4 subjects).")
+
 
     def remove_subject(self, student):
         if student.enrolled_subjects:
             subject_options = [subject.id for subject in student.enrolled_subjects]
             selected_subject = simpledialog.askstring("Remove Subject", f"Select subject to remove: {subject_options}")
             if selected_subject in subject_options:
-                student.enrolled_subjects = [subject for subject in student.enrolled_subjects if subject.id != selected_subject]
-                messagebox.showinfo("Subject Removed", f"Subject {selected_subject} successfully removed.")
+                student.enrolled_subjects = [subject for subject in student.enrolled_subjects if subject.id == selected_subject]
+                selected_subject = student.enrolled_subjects.pop()
+                messagebox.showinfo("Subject Removed", f"Subject {selected_subject.id} successfully removed.")
             else:
                 messagebox.showerror("Error", "Invalid subject selection.")
         else:
@@ -264,6 +284,11 @@ class UniAppSystem:
             messagebox.showinfo("Error", centered_invalid_message)
             messagebox.showinfo("Note", centered_note_message)
 
+    #def logout(self):
+     #   parent_window = self.root.master if self.root.master else self.root
+      #  self.root.destroy()  # Hide the current window
+
+
     def logout(self):
         self.logged_in_student = None
         self.root.destroy()
@@ -274,24 +299,35 @@ class UniAppSystem:
     def student_course_menu(self):
         student_course_menu_window = tk.Toplevel(self.root)
         student_course_menu_window.title("Student Menu")
+        student_course_menu_window.geometry("400x400")
+        student_course_menu_window.configure(bg="#f0f0f0")
 
-        tk.Label(student_course_menu_window, text="Student Course Menu").pack()
-        tk.Button(student_course_menu_window, text="Enrol into a subject", command=lambda: self.enroll_subject(self.logged_in_student)).pack()
-        tk.Button(student_course_menu_window, text="Remove a subject from enrolment", command=lambda: self.remove_subject(self.logged_in_student)).pack()
-        tk.Button(student_course_menu_window, text="Show current enrolment", command=lambda: self.show_enrolment(self.logged_in_student)).pack()
-        tk.Button(student_course_menu_window, text="Change password", command=lambda: self.change_password(self.logged_in_student)).pack()
-        tk.Button(student_course_menu_window, text="Logout", command=self.logout).pack()
+        button_style = {"font": ("Arial", 12,  "bold"), "bg": "#ccd5ae", "fg": "white"}
+        label_style = {"font": ("Arial", 16), "bg": "#f0f0f0", "fg": "black"}
+
+        tk.Label(student_course_menu_window, text="Student Course Menu", **label_style).pack(pady=5)
+        tk.Button(student_course_menu_window, text="Enrol into a subject", command=lambda: self.enroll_subject(self.logged_in_student), **button_style).pack(pady=5)
+        tk.Button(student_course_menu_window, text="Remove a subject from enrolment", command=lambda: self.remove_subject(self.logged_in_student), **button_style).pack(pady=5)
+        tk.Button(student_course_menu_window, text="Show current enrolment", command=lambda: self.show_enrolment(self.logged_in_student), **button_style).pack(pady=5)
+        tk.Button(student_course_menu_window, text="Change password", command=lambda: self.change_password(self.logged_in_student), **button_style).pack(pady=5)
+        tk.Button(student_course_menu_window, text="Logout", command=self.logout, **button_style).pack(pady=5)
 
     def admin_menu(self):
         admin_menu_window = tk.Toplevel(self.root)
         admin_menu_window.title("Admin Menu")
+        admin_menu_window.geometry("400x400")
+        admin_menu_window.configure(bg="#f0f0f0")
 
-        tk.Button(admin_menu_window, text="Show all students", command=self.show_all_students).pack(pady=5)
-        tk.Button(admin_menu_window, text="Group students by grade", command=self.group_students_by_grade).pack(pady=5)
-        tk.Button(admin_menu_window, text="Partition students by PASS/FAIL category", command=self.partition_students).pack(pady=5)
-        tk.Button(admin_menu_window, text="Remove a student", command=self.remove_student).pack(pady=5)
-        tk.Button(admin_menu_window, text="Clear all student data", command=self.clear_students_window).pack(pady=5)
-        tk.Button(admin_menu_window, text="Exit", command=admin_menu_window.destroy).pack(pady=5)
+
+        button_style = {"font": ("Arial", 12,  "bold"), "bg": "#ccd5ae", "fg": "white"}
+        
+
+        tk.Button(admin_menu_window, text="Show all students", command=self.show_all_students, **button_style).pack(pady=5)
+        tk.Button(admin_menu_window, text="Group students by grade", command=self.group_students_by_grade, **button_style).pack(pady=5)
+        tk.Button(admin_menu_window, text="Partition students by PASS/FAIL category", command=self.partition_students, **button_style).pack(pady=5)
+        tk.Button(admin_menu_window, text="Remove a student", command=self.remove_student, **button_style).pack(pady=5)
+        tk.Button(admin_menu_window, text="Clear all student data", command=self.clear_students_window, **button_style).pack(pady=5)
+        tk.Button(admin_menu_window, text="Exit", command=admin_menu_window.destroy, **button_style).pack(pady=5)
 
     def show_all_students(self):
         all_students_window = tk.Toplevel(self.root)
@@ -368,17 +404,14 @@ class UniAppSystem:
                 if student.email == email:
                     self.students.pop(i)
                     found = True
-                    messagebox.showinfo("Success", "Student removed!")
-                    break
+                    
+
             if not found:
                 messagebox.showinfo("Error", "Student not found!")
 
         tk.Button(remove_student_window, text="Remove", command=remove).pack(pady=5)
 
     def clear_students_window(self):
-
-        clear_students_window = tk.Toplevel(self.root)
-        clear_students_window.title("Clear Students Data File")
 
         confirmation = messagebox.askyesno("Confirmation", "Are you sure you want to clear all student data?")
         if confirmation:
