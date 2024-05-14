@@ -353,8 +353,11 @@ class UniAppSystem:
 
                     for student in students:
                       if student['email'] == email:
-                          students.remove(student)
-                          break  
+                        students.remove(student)
+                        print(colors.YELLOW + "Student has been removed successfully." + colors.RESET)
+                        break
+                      else:
+                        print(colors.RED + "Student not found in database. Please try again." + colors.RESET)  
                       
                     # Write the modified data back to the original file
                     with open('students.data', 'w') as file:
