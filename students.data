@@ -1,1 +1,42 @@
-[{"id": "499590", "first_name": "Niramon ", "last_name": "Kitrattanasak", "email": "niramon@university.com", "password": "Niramon123", "enrolled_subjects": [{"subject_id": "486", "mark": 68, "grade": "C"}, {"subject_id": "823", "mark": 93, "grade": "HD"}, {"subject_id": "124", "mark": 60, "grade": "P"}]}]
+[
+    {
+        "id": "148455",
+        "first_name": "Niramon ",
+        "last_name": "Kitrattanasak",
+        "email": "niramon@university.com",
+        "password": "Niramon123",
+        "enrolled_subjects": [
+            {
+                "subject_id": "116",
+                "mark": 68,
+                "grade": "C"
+            },
+            {
+                "subject_id": "195",
+                "mark": 93,
+                "grade": "HD"
+            },
+            {
+                "subject_id": "701",
+                "mark": 60,
+                "grade": "P"
+            }
+        ]
+    },
+    {
+        "id": "431126",
+        "first_name": "H",
+        "last_name": "D",
+        "email": "hd@university.com",
+        "password": "Password123",
+        "enrolled_subjects": []
+    },
+    {
+        "id": "925039",
+        "first_name": "L",
+        "last_name": "S",
+        "email": "l.s@university.com",
+        "password": "Lailasevim123",
+        "enrolled_subjects": []
+    }
+]
