@@ -103,6 +103,7 @@ class Database:
 
 
   def register_student(self):
+      print(colors.GREEN + "Student Registration" + colors.RESET)
       first_name = input("Enter your first name: ").capitalize()
       last_name = input("Enter your last name: ").capitalize()
       email = input("Enter your email: ").lower()
@@ -149,6 +150,7 @@ class UniAppSystem:
             match choice:
               
               case 'l':
+                print(colors.GREEN + "Student Login" + colors.RESET)
                 email = input("Enter email: ").lower()
                 password = input("Enter password: ")
                 student = self.student_login(email, password, students)
