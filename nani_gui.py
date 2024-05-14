@@ -269,7 +269,8 @@ class UniAppSystem:
         new_password = simpledialog.askstring("Change Password", "Enter new password:")
         confirm_password = simpledialog.askstring("Change Password", "Confirm password:")
         if new_password != confirm_password:
-            messagebox.showinfo("Passwords do not match, please try again.")
+            centered_message1 = "\n".join(["" * 10 + line for line in "Passwords do not match, please try again".split("\n")])
+            messagebox.showinfo("Failure", centered_message1)
             return
         if student.is_valid_password(new_password):
             student.password = new_password
@@ -399,15 +400,22 @@ class UniAppSystem:
 
         def remove():
             email = email_entry.get().strip()
-            found = False
-            for i, student in enumerate(self.students):
-                if student.email == email:
-                    self.students.pop(i)
-                    found = True
-                    
+            
+            with open('students.data', 'r') as file:
+                    students = json.load(file)
 
-            if not found:
-                messagebox.showinfo("Error", "Student not found!")
+                    for student in students:
+                        if student['email'] == email:
+                          students.remove(student)
+                          messagebox.showinfo("Success", "Student removed from system.")
+                          break  # Exit loop after first match assuming emails are unique
+                        else:
+                          messagebox.showinfo("Error", "Student not found")
+                      
+                    # Step 3: Write the modified data structure back to the JSON file
+                    with open('students.data', 'w') as file:
+                        json.dump(students, file, indent=4) 
+                    
 
         tk.Button(remove_student_window, text="Remove", command=remove).pack(pady=5)
 
