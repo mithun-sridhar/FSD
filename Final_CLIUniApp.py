@@ -4,6 +4,18 @@ import re
 import json
 import sys
 
+
+# ANSI color codes
+class colors:
+    RESET = "\033[0m"
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    
+
 class Student:
   def __init__(self, first_name, last_name, email, password):
     self.first_name = first_name
@@ -12,6 +24,8 @@ class Student:
     self.password = password
     self.id = self.generate_id()
     self.enrolled_subjects = []
+
+    
 
   def generate_id(self):
     student_id = str(random.randint(1, 999999))
@@ -36,9 +50,9 @@ class Student:
       return True
     else:
       if not self.is_valid_email(email):
-          print("Email format incorrect. Please ensure it is in the following format: first.last@university.com")
+          print(colors.RED + "Email format incorrect. Please ensure it is in the following format: first.last@university.com" + colors.RESET)
       if not self.is_valid_password(password):
-          print("Password does not meet requirements. Please ensure it is 6 characters long, starts with a letter, and ends with three digits.")
+          print(colors.RED + "Password does not meet requirements. Please ensure it is 6 characters long, starts with a letter, and ends with three digits." + colors.RESET)
       
       return False
       
@@ -97,7 +111,7 @@ class Database:
       if new_student.register(first_name, last_name, email, password):
         return new_student
       else:
-        print("Registration failed! Please check your email and password format.")
+        print(colors.RED + "Registration failed! Please check your email and password format." + colors.RESET)
         return False
 
 
@@ -124,11 +138,11 @@ class UniAppSystem:
             
   def student_menu(self, students):
       while True:
-            print("\nStudent Menu:")
+            print(colors.BLUE + "\nStudent Menu:")
             print("(l) Login as student")
             print("(r) Register as student")
             print("(x) Exit")
-            choice = input("Enter your choice: ").lower()
+            choice = input("Enter your choice: " + colors.RESET).lower()
 
             database = Database()
 
@@ -139,11 +153,11 @@ class UniAppSystem:
                 password = input("Enter password: ")
                 student = self.student_login(email, password, students)
                 if student:
-                  print("Login successful. Transferring to student course menu.")
+                  print(colors.YELLOW + "Login successful. Transferring to student course menu." + colors.RESET)
                   self.student_course_menu(student)
                   database.save_students(students)
                 else:
-                   print("Login unsuccessful, please try again.")
+                   print(colors.RED + "Login unsuccessful, please try again." + colors.RESET)
                 
                   
               
@@ -160,30 +174,30 @@ class UniAppSystem:
                   if email_exists == False:
                     students.append(new_student)
                     database.save_students(students)
-                    print("Registration successful! Please login to proceed.")
+                    print(colors.YELLOW + "Registration successful! Please login to proceed." + colors.RESET)
                   else:
-                    print(f"Student already exists.")
+                    print(colors.RED + f"Student already exists." + colors.RESET)
                 
               
               case 'x':
-                  print("Exiting Student Menu, returning to System menu.")
+                  print(colors.YELLOW + "Exiting Student Menu, returning to System menu." + colors.RESET)
                   self.main()
               
               case _:
-                  print("Invalid choice, please try again.")
+                  print(colors.RED + "Invalid choice, please try again." + colors.RESET)
                   
                   
 
 
   def student_course_menu(self, student):
       while True:
-        print("\nStudent Course Menu:")
+        print(colors.BLUE + "\nStudent Course Menu:")
         print("(e) Enrol into a subject")
         print("(r) Remove a subject from enrolment")
         print("(s) Show current enrolment")
         print("(c) Change password")
         print("(x) Logout")
-        choice = input("Enter your choice: ")
+        choice = input("Enter your choice: " + colors.RESET)
 
         match choice:
             # enrol into subject
@@ -192,27 +206,27 @@ class UniAppSystem:
                     subject_enrolled = Subject()
                     student.enrolled_subjects.append(subject_enrolled)
                     num_enrolled = len(student.enrolled_subjects)
-                    print(f"Enrolled successfully into subject {subject_enrolled.id}")
-                    print(f"You are now enrolled in {num_enrolled} out of 4 subjects.")
+                    print(colors.YELLOW + f"Enrolled successfully into subject {subject_enrolled.id}" + colors.RESET)
+                    print(colors.GREEN + f"You are now enrolled in {num_enrolled} out of 4 subjects." + colors.RESET)
                 else:
-                    print("Maximum enrolment reached (4 subjects)")
+                    print(colors.RED + "Maximum enrolment reached (4 subjects)" + colors.RESET)
 
             # remove subject
             case 'r':
                 if student.enrolled_subjects:
                     subject_removed = student.enrolled_subjects.pop()
-                    print(f"Subject {subject_removed.id} removed!")
+                    print(colors.YELLOW + f"Subject {subject_removed.id} removed!" + colors.RESET)
                 else:
-                    print("No subjects enrolled!")
+                    print(colors.RED + "No subjects enrolled!" + colors.RESET)
 
             # show enrolment
             case 's':
                 if student.enrolled_subjects:
-                    print("\nEnrolled Subjects:")
+                    print(colors.GREEN + "\nEnrolled Subjects:" + colors.RESET)
                     for i, subject in enumerate(student.enrolled_subjects):
                         print(f"{i+1}. Subject ID: {subject.id}, Mark: {subject.mark}, Grade: {subject.grade}")
                 else:
-                    print("No subjects enrolled!")
+                    print(colors.RED + "No subjects enrolled!" + colors.RESET)
 
             # change password
             case 'c':
@@ -220,24 +234,24 @@ class UniAppSystem:
                   new_password = input("Enter new password: ")
                   confirm_password = input("Confirm password: ")
                   if new_password != confirm_password:
-                     print("Passwords do not match, please try again.")
+                     print(colors.RED + "Passwords do not match, please try again." + colors.RESET)
                      continue
                   else:
                      break
                 if student.is_valid_password(new_password):
                     student.password = new_password
-                    print("Password changed successfully!")
+                    print(colors.GREEN + "Password changed successfully!" + colors.RESET)
                 else:
-                    print("Invalid password format! Please try again.")
-                    print("Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits.")
+                    print(colors.RED + "Invalid password format! Please try again." + colors.RESET)
+                    print(colors.MAGENTA + "Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits." + colors.RESET)
 
             # exit system
             case 'x':
-                print("Logged out!")
+                print(colors.YELLOW + "Logged out!" + colors.RESET)
                 return
 
             case _:
-                print("Invalid choice, please try again.")
+                print(colors.RED + "Invalid choice, please try again." + colors.RESET)
 
           
   def group_by_grade(self, students):
@@ -276,7 +290,7 @@ class UniAppSystem:
         else:
             failed_students.append(student)
 
-    print("\nPassed Students:")
+    print(colors.YELLOW + "\nPassed Students:" + colors.RESET)
     # Create a set to store unique student names
     student_names = set()
 
@@ -290,7 +304,7 @@ class UniAppSystem:
     for name in student_names:
         print(f"- {name}")
 
-    print("\nFailed Students:")
+    print(colors.YELLOW + "\nFailed Students:" + colors.RESET)
     # Create a set to store unique student names
     student_names = set()
 
@@ -303,19 +317,19 @@ class UniAppSystem:
 
   def admin_menu(self, students):
         while True:
-            print("\nAdmin Menu:")
+            print(colors.BLUE + "\nAdmin Menu:")
             print("(s) Show all students")
             print("(g) Group students by grade")
             print("(p) Partition students by PASS/FAIL category")
             print("(r) Remove a student")
             print("(c) Clear all student data")
             print("(x) Exit")
-            choice = input("Enter your choice: ").lower()
+            choice = input("Enter your choice: " + colors.RESET).lower()
 
             match choice:
                 # show all students
                 case 's':
-                    print("\nAll Students:")
+                    print(colors.YELLOW + "\nAll Students:" + colors.RESET)
                     for student in students:
                         print(f"ID: {student.id}, Name: {student.first_name} {student.last_name}, Email: {student.email}")
 
@@ -348,23 +362,23 @@ class UniAppSystem:
 
                 # clear all student data
                 case 'c':
-                    confirmation = input("Are you sure you want to clear all student data? (y/n): ")
+                    confirmation = input(colors.RED + "Are you sure you want to clear all student data? (y/n): " + colors.RESET)
                     if confirmation.lower() == "y":
                       try:
                         with open("students.data", "w") as file:
                             json.dump([], file)
-                        print("All student data cleared!")
+                        print(colors.YELLOW + "All student data cleared!" + colors.RESET)
                       except FileNotFoundError:
-                        print("Unable to clear student data.")
+                        print(colors.RED + "Unable to clear student data." + colors.RESET)
 
                 #exit admin system, return to main menu
                 case 'x':
-                    print("Exiting admin menu")
+                    print(colors.YELLOW + "Exiting admin menu" + colors.RESET)
                     self.main()
         
                 # catch any invalid input
                 case _:
-                    print("Invalid input, please try again.")
+                    print(colors.RED + "Invalid input, please try again." + colors.RESET)
 
 
   def main(self):
@@ -373,11 +387,11 @@ class UniAppSystem:
       students = database.load_students()
 
       while True:
-        print("\nCLIUniApp - University Enrolment System")
+        print(colors.BLUE + "\nCLIUniApp - University Enrolment System")
         print("(S) Enter Student System")
         print("(A) Enter Admin System")
         print("(X) Exit")
-        choice = input("Enter your choice: ").lower()
+        choice = input("Enter your choice: " + colors.RESET).lower()
         
         match choice:
           
@@ -392,11 +406,11 @@ class UniAppSystem:
             break
 
           case 'x':
-            print("Exiting CLIUniApp!")
+            print(colors.YELLOW + "Exiting CLIUniApp!" + colors.RESET)
             sys.exit()
           
           case _:
-            print("Invalid choice!")
+            print(colors.RED + "Invalid choice!" + colors.RESET)
             
    
 
