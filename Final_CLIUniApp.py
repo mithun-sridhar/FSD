@@ -330,7 +330,7 @@ class UniAppSystem:
                 # remove a student
                 case 'r':
                     email = input("Enter student email to remove: ")
-                    # Search for the entry corresponding to the provided email
+                    
 
                     with open('students.data', 'r') as file:
                       students = json.load(file)
@@ -338,9 +338,9 @@ class UniAppSystem:
                     for student in students:
                       if student['email'] == email:
                           students.remove(student)
-                          break  # Exit loop after first match assuming emails are unique
+                          break  
                       
-                    # Step 3: Write the modified data structure back to the JSON file
+                    # Write the modified data back to the original file
                     with open('students.data', 'w') as file:
                         json.dump(students, file, indent=4) 
 
