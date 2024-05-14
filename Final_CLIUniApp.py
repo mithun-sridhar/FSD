@@ -331,9 +331,12 @@ class UniAppSystem:
             match choice:
                 # show all students
                 case 's':
+                    with open('students.data', 'r') as file:
+                      students1 = json.load(file)
+
                     print(colors.YELLOW + "\nAll Students:" + colors.RESET)
-                    for student in students:
-                        print(f"ID: {student.id}, Name: {student.first_name} {student.last_name}, Email: {student.email}")
+                    for student in students1:
+                        print(f"ID: {student['id']}, Name: {student['first_name']} {student['last_name']}, Email: {student['email']}")
 
                 # group students by grade
                 case 'g':
@@ -345,14 +348,14 @@ class UniAppSystem:
 
                 # remove a student
                 case 'r':
-                    email = input("Enter student email to remove: ")
+                    id = input("Enter student id to remove: ")
                     
 
                     with open('students.data', 'r') as file:
                       students = json.load(file)
 
                     for student in students:
-                      if student['email'] == email:
+                      if student['id'] == id:
                         students.remove(student)
                         print(colors.YELLOW + "Student has been removed successfully." + colors.RESET)
                         break
