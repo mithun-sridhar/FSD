@@ -17,7 +17,7 @@ class Student:
     student_id = str(random.randint(1, 999999))
     return student_id.zfill(6)
 
-
+  # make sure the email is in the format first.last@university.com
   def is_valid_email(self, email):
     return bool(re.match(r"^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*@university\.com$", email))
 
@@ -25,7 +25,7 @@ class Student:
   def is_valid_password(self, password):
     return bool(re.match( r"^[A-Z].{5,}[0-9]{3}$", password))
 
-
+  # validate student details are correct before adding to database
   def register(self, first_name, last_name, email, password):
     if self.is_valid_email(email) and self.is_valid_password(password):
       self.first_name = first_name
