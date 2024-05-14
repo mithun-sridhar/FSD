@@ -273,7 +273,7 @@ class UniAppSystem:
     for grade, subjects in subjects_by_grade.items():
         if subjects:
             print("\n")
-            print(f"Subjects with grade {grade}:")
+            print(colors.YELLOW + f"Subjects with grade {grade}:" + colors.RESET)
             for subject in subjects:
                 print(f"Student: {student.first_name} {student.last_name}, Email: {student.email}, Subject: {subject.id}, Subject Mark: {subject.mark}")
 
