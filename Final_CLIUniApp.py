@@ -26,7 +26,7 @@ class Student:
     self.enrolled_subjects = []
 
     
-
+  # generate a random 6-digit id number for students
   def generate_id(self):
     student_id = str(random.randint(1, 999999))
     return student_id.zfill(6)
@@ -35,7 +35,7 @@ class Student:
   def is_valid_email(self, email):
     return bool(re.match(r"^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*@university\.com$", email))
 
-  #password must start with uppercase, have 6 letters and 3 digits at the end (total 9 characaters)
+  # password must start with uppercase, have 6 letters and 3 digits at the end (total 9 characaters)
   def is_valid_password(self, password):
     return bool(re.match( r"^[A-Z].{5,}[0-9]{3}$", password))
 
@@ -212,14 +212,40 @@ class UniAppSystem:
                     print(colors.GREEN + f"You are now enrolled in {num_enrolled} out of 4 subjects." + colors.RESET)
                 else:
                     print(colors.RED + "Maximum enrolment reached (4 subjects)" + colors.RESET)
+                
 
             # remove subject
             case 'r':
                 if student.enrolled_subjects:
-                    subject_removed = student.enrolled_subjects.pop()
-                    print(colors.YELLOW + f"Subject {subject_removed.id} removed!" + colors.RESET)
-                else:
-                    print(colors.RED + "No subjects enrolled!" + colors.RESET)
+                    print(colors.GREEN + "Remove Subject from Enrollment" + colors.RESET)
+
+                    with open('students.data', 'r') as file:
+                      students1 = json.load(file)
+
+                    list_ids = []
+                    for student in students1:
+                       for subject in student:
+                        list_ids.append(subject['subject_id'])
+                    
+                    print(colors.MAGENTA + f"Subject ID's in enrollment: {list_ids}" + colors.RESET)
+
+                    id_remove = input("Enter subject id to remove: ")
+                    
+                    if id_remove not in list_ids:
+                      print(colors.RED + "Subject not found in student's enrolment list. Please try again." + colors.RESET)  
+                    
+                    for student in students:
+                      for subject in student:
+                        if subject['subject_id'] == id_remove:
+                          student.remove(subject)
+                          print(colors.YELLOW + f"Subject {id_remove} has been removed successfully." + colors.RESET)
+                          break
+                      
+
+                    # Write the modified data back to the original file
+                    with open('students.data', 'w') as file:
+                        json.dump(students, file, indent=4)
+                
 
             # show enrolment
             case 's':
@@ -228,8 +254,8 @@ class UniAppSystem:
                     for i, subject in enumerate(student.enrolled_subjects):
                         print(f"{i+1}. Subject ID: {subject.id}, Mark: {subject.mark}, Grade: {subject.grade}")
                 else:
-                    print(colors.RED + "No subjects enrolled!" + colors.RESET)
-
+                    print(colors.YELLOW + "Showing 0 subjects - no subjects enrolled" + colors.RESET)
+                
             # change password
             case 'c':
                 while True:
@@ -246,6 +272,7 @@ class UniAppSystem:
                 else:
                     print(colors.RED + "Invalid password format! Please try again." + colors.RESET)
                     print(colors.MAGENTA + "Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits." + colors.RESET)
+                
 
             # exit system
             case 'x':
@@ -268,6 +295,17 @@ class UniAppSystem:
         for subject in student.enrolled_subjects:
             grade = subject.grade
             subjects_by_grade[grade].append(subject)
+    
+    # Print if there are no students
+    try:
+      with open('students.data', 'r') as file:
+        students1 = json.load(file)
+    except FileNotFoundError:
+      print(colors.RED + "File not found error --> file has been created, please login to system again." + colors.RESET)
+      return []
+       
+    if len(students1) == 0:
+       print("\t<Nothing to display>")
 
     # Print subjects grouped by grade
     for grade, subjects in subjects_by_grade.items():
@@ -276,6 +314,7 @@ class UniAppSystem:
             print(colors.YELLOW + f"Subjects with grade {grade}:" + colors.RESET)
             for subject in subjects:
                 print(f"Student: {student.first_name} {student.last_name}, Email: {student.email}, Subject: {subject.id}, Subject Mark: {subject.mark}")
+      
 
 
   def partition_pass_fail(self, students):
@@ -292,7 +331,9 @@ class UniAppSystem:
         else:
             failed_students.append(student)
 
-    print(colors.YELLOW + "\nPassed Students:" + colors.RESET)
+    print(colors.YELLOW + "\nPASS:" + colors.RESET)
+    if len(passed_students) == 0:
+           print("\t<Nothing to display>")
     # Create a set to store unique student names
     student_names = set()
 
@@ -301,13 +342,14 @@ class UniAppSystem:
         average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
         name = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
         student_names.add(name)
+        
 
     # Print each unique student name
     for name in student_names:
         print(f"- {name}")
 
-    print(colors.YELLOW + "\nFailed Students:" + colors.RESET)
-    # Create a set to store unique student names
+    
+    # Create a set to store unique student names - clear out old set
     student_names = set()
 
     for student in failed_students:
@@ -315,6 +357,21 @@ class UniAppSystem:
         average_score = total_marks / len(student["enrolled_subjects"]) if student.enrolled_subjects else 0
         name = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
         student_names.add(name)
+
+    print(colors.YELLOW + "\nFAIL:" + colors.RESET)
+    if len(failed_students) == 0:
+       print("\t<Nothing to display>")
+    for student in failed_students:
+      if average_score == 0:
+          print("\t<Nothing to Display>")
+          break
+      else:
+         # Print each unique student name
+        for name in student_names:
+            print(f"- {name}")
+         
+        
+        
 
 
   def admin_menu(self, students):
@@ -331,12 +388,19 @@ class UniAppSystem:
             match choice:
                 # show all students
                 case 's':
-                    with open('students.data', 'r') as file:
-                      students1 = json.load(file)
+                    try:
+                      with open('students.data', 'r') as file:
+                        students1 = json.load(file)
+                    except FileNotFoundError:
+                      print(colors.RED + "File not found error --> file has been created, please login to system again." + colors.RESET)
+                      return []
+
 
                     print(colors.YELLOW + "\nAll Students:" + colors.RESET)
                     for student in students1:
                         print(f"ID: {student['id']}, Name: {student['first_name']} {student['last_name']}, Email: {student['email']}")
+                    if len(students) == 0:
+                      print("\t<Nothing to display>")
 
                 # group students by grade
                 case 'g':
@@ -348,19 +412,27 @@ class UniAppSystem:
 
                 # remove a student
                 case 'r':
-                    id = input("Enter student id to remove: ")
-                    
+                    print(colors.GREEN + "Remove Student Account" + colors.RESET)
 
                     with open('students.data', 'r') as file:
                       students = json.load(file)
 
+                    list_ids = []
+                    for student in students:
+                       list_ids.append(student['id'])
+                    
+                    print(colors.MAGENTA + f"Student ID's in database: {list_ids}" + colors.RESET)
+
+                    id = input("Enter student id to remove: ")
+                    
                     for student in students:
                       if student['id'] == id:
                         students.remove(student)
                         print(colors.YELLOW + "Student has been removed successfully." + colors.RESET)
                         break
-                      else:
-                        print(colors.RED + "Student not found in database. Please try again." + colors.RESET)  
+                    
+                    if id not in list_ids:
+                      print(colors.RED + "Student not found in database. Please try again." + colors.RESET)  
                       
                     # Write the modified data back to the original file
                     with open('students.data', 'w') as file:
