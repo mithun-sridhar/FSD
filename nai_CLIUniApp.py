@@ -82,6 +82,28 @@ class Database:
   def __init__(self):
      pass
 
+  def update_student_subjects(self, student):
+        try:
+            with open("students.data", "r") as file:
+                students_data = json.load(file)
+
+            # Find the index of the student in the list
+            for index, data in enumerate(students_data):
+                if data["id"] == student.id:
+                    # Update the enrolled subjects for the student
+                    students_data[index]["enrolled_subjects"] = [{
+                        "subject_id": subject.id,
+                        "mark": subject.mark,
+                        "grade": subject.grade
+                    } for subject in student.enrolled_subjects]
+
+            # Write the modified data back to the original file
+            with open("students.data", "w") as file:
+                json.dump(students_data, file, indent=4)
+
+        except FileNotFoundError:
+            print("Error: students data file not found.")
+
   def load_students(self):
       try:
             with open("students.data", "r") as file:
