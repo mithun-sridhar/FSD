@@ -33,7 +33,7 @@ class Student:
 
   # make sure the email is in the format first.last@university.com
   def is_valid_email(self, email):
-    return bool(re.match(r"^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*@university\.com$", email))
+    return bool(re.match(r"^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)+@university\.com$", email))
 
   # password must start with uppercase, have 6 letters and 3 digits at the end (total 9 characaters)
   def is_valid_password(self, password):
