@@ -3,6 +3,7 @@ from tkinter import messagebox, simpledialog
 import random
 import re
 import json
+from collections import defaultdict
 
 
 class Student:
@@ -19,7 +20,7 @@ class Student:
         return student_id.zfill(6)
 
     def is_valid_email(self, email):
-        return bool(email.endswith("@university.com") and ("@" in email) and ("." in email))
+        return bool(re.match(r"^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)+@university\.com$", email))
 
     def is_valid_password(self, password):
         return bool(re.match(r"^[A-Z].{5,}[0-9]{3}$", password))
@@ -90,7 +91,7 @@ class Database:
         data = [{"id": s.id, "first_name": s.first_name, "last_name": s.last_name, "email": s.email, "password": s.password,
                  "enrolled_subjects": [{"subject_id": subj.id, "mark": subj.mark, "grade": subj.grade} for subj in s.enrolled_subjects]} for s in students]
         with open("students.data", "w") as file:
-            json.dump(data, file)
+            json.dump(data, file, indent=4)
 
 
 class UniAppSystem:
@@ -102,10 +103,16 @@ class UniAppSystem:
         self.main_menu()
 
     def student_login(self, email, password):
+        try:
+            with open('students.data', 'r') as file:
+                students = json.load(file)
+        except FileNotFoundError:
+            return []
+        
         # Iterate through each student's data in the file
-        for student in self.students:
+        for student in students:
             # Check if the email and password match
-            if student.email == email and student.password == password:
+            if student['email'] == email and student['password'] == password:
                 return student  # Credentials match
         return None  # No match found
 
@@ -117,7 +124,6 @@ class UniAppSystem:
             if student:
                 self.logged_in_student = student  # Store the logged-in student
                 self.student_course_menu()
-                self.database.save_students(self.students)
                 return self.logged_in_student
             else:
                 messagebox.showerror("Error", "Login unsuccessful, please try again.")
@@ -231,52 +237,107 @@ class UniAppSystem:
 
 
     def enroll_subject(self, student):
-        if self.logged_in_student and len(self.logged_in_student.enrolled_subjects) < 4:
+
+        try:
+            with open('students.data', 'r') as file:
+                    students = json.load(file)
+        except FileNotFoundError:
+            return []
+              
+        student1 = next((s for s in students if s['id'] == self.logged_in_student['id']), None)
+
+        if len(student1['enrolled_subjects']) < 4:
             subject_enrolled = Subject()
-            self.logged_in_student.enrolled_subjects.append(subject_enrolled)
-            num_enrolled = len(self.logged_in_student.enrolled_subjects)
+            student1['enrolled_subjects'].append({
+                "subject_id": subject_enrolled.id,
+                "mark": subject_enrolled.mark,
+                "grade": subject_enrolled.grade
+            })
+            num_enrolled = len(student1['enrolled_subjects'])
             messagebox.showinfo("Enrolled successfully", f"Enrolled successfully into subject {subject_enrolled.id}. You are now enrolled in {num_enrolled} out of 4 subjects.")
-            self.database.save_students(self.students)
-        elif not self.logged_in_student:
-            messagebox.showerror("Error", "No student logged in.")
+                # Save the updated student data to the file
+            with open('students.data', 'w') as file:
+                json.dump(students, file, indent=4)
         else:
             messagebox.showinfo("Maximum enrolment reached", "Maximum enrolment reached (4 subjects).")
-
+  
 
     def remove_subject(self, student):
-        if student.enrolled_subjects:
-            subject_options = [subject.id for subject in student.enrolled_subjects]
-            selected_subject = simpledialog.askstring("Remove Subject", f"Select subject to remove: {subject_options}")
-            if selected_subject in subject_options:
-                student.enrolled_subjects = [subject for subject in student.enrolled_subjects if subject.id == selected_subject]
-                selected_subject = student.enrolled_subjects.pop()
-                messagebox.showinfo("Subject Removed", f"Subject {selected_subject.id} successfully removed.")
-            else:
-                messagebox.showerror("Error", "Invalid subject selection.")
+        try:
+            with open('students.data', 'r') as file:
+                students_data = json.load(file)
+        except FileNotFoundError:
+            messagebox.showerror("Error", "File not found error. Please try again.")
+            return
+        
+        list_ids = []
+        for student1 in students_data:
+            if student1['id'] == student['id']:
+                for subject in student1['enrolled_subjects']:
+                    list_ids.append(subject['subject_id'])
+        
+        id_remove = simpledialog.askstring("Remove Subject", f"Subject ID's in enrollment: {list_ids}\n Enter subject_id to remove: ")
+
+        for student2 in students_data:
+            if student2['id'] == student['id']:
+                enrolled_subjects = student2.get('enrolled_subjects', [])
+                for subject in enrolled_subjects:
+                    if subject['subject_id'] == id_remove:
+                        enrolled_subjects.remove(subject)
+                        messagebox.showinfo("Subject Removed", f"Subject {id_remove} has been removed successfully.")
+                        break
+                else:
+                    messagebox.showerror("Error", "Subject not found in student's enrollment list. Please try again.")
+                break
         else:
-            messagebox.showinfo("No subjects enrolled!", "No subjects enrolled!")
+            messagebox.showerror("Error", f"Student with ID {student['id']} not found.") 
+
+        with open('students.data', 'w') as file:
+            json.dump(students_data, file, indent=4)
 
     def show_enrolment(self, student):
-        if student.enrolled_subjects:
-            enrolment_info = "\nEnrolled Subjects:\n"
-            for i, subject in enumerate(student.enrolled_subjects):
-                enrolment_info += f"{i+1}. Subject ID: {subject.id}, Mark: {subject.mark}, Grade: {subject.grade}\n"
-            messagebox.showinfo("Current Enrolment", enrolment_info)
+        try:
+            with open('students.data', 'r') as file:
+                students = json.load(file)
+        except FileNotFoundError:
+                return []
+                
+        student1 = next((s for s in students if s['id'] == self.logged_in_student['id']), None)
+
+        enrolled_subjects_info = ""
+
+        if len(student1['enrolled_subjects']) > 0 and student1['id'] == self.logged_in_student['id']:
+            for i, subject in enumerate(student1['enrolled_subjects']):
+                enrolled_subjects_info += f"{i+1}. Subject ID: {subject['subject_id']}, Mark: {subject['mark']}, Grade: {subject['grade']}\n"
+            messagebox.showinfo("Subject Enrollment", enrolled_subjects_info)
         else:
-            messagebox.showinfo("No subjects enrolled!", "No subjects enrolled!")
+            enrolled_subjects_info = "Showing 0 subjects - no subjects enrolled"
+            messagebox.showinfo("Notice", f"{enrolled_subjects_info}")
+
 
     def change_password(self, student):
+        function = Student(None, None, None, None)
         new_password = simpledialog.askstring("Change Password", "Enter new password:")
         confirm_password = simpledialog.askstring("Change Password", "Confirm password:")
         if new_password != confirm_password:
             centered_message1 = "\n".join(["" * 10 + line for line in "Passwords do not match, please try again".split("\n")])
             messagebox.showinfo("Failure", centered_message1)
             return
-        if student.is_valid_password(new_password):
-            student.password = new_password
-            centered_message = "\n".join(["" * 10 + line for line in "Password changed successfully!".split("\n")])
-            messagebox.showinfo("Success", centered_message)
-           
+        if function.is_valid_password(new_password):
+            try:
+                with open('students.data', 'r') as file:
+                    students = json.load(file)
+            except FileNotFoundError:
+                  print("File not found error. Please check the file path.")
+                  return
+            for student1 in students:
+                if student1['id'] == self.logged_in_student['id']:
+                    student1['password'] = new_password
+                    centered_message = "\n".join(["" * 10 + line for line in "Password changed successfully!".split("\n")])
+                    messagebox.showinfo("Success", centered_message)
+                    with open('students.data', 'w') as file:
+                        json.dump(students, file, indent=4)
+            
         else:
             invalid_message = "Invalid password format! Please try again."
             note_message = "Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits."
@@ -284,10 +345,6 @@ class UniAppSystem:
             centered_note_message = "\n".join(["" * 10 + line for line in note_message.split("\n")])
             messagebox.showinfo("Error", centered_invalid_message)
             messagebox.showinfo("Note", centered_note_message)
-
-    #def logout(self):
-     #   parent_window = self.root.master if self.root.master else self.root
-      #  self.root.destroy()  # Hide the current window
 
 
     def logout(self):
@@ -344,7 +401,8 @@ class UniAppSystem:
         group_by_grade_window = tk.Toplevel(self.root)
         group_by_grade_window.title("Group Students by Grade")
 
-        subjects_by_grade = {"HD": [], "D": [], "C": [], "P": [], "Z": []}
+        grades_order = ["HD", "D", "C", "P", "Z"]
+        subjects_by_grade = {grade: [] for grade in grades_order}
 
         # Group subjects by grade
         for student in self.students:
@@ -353,12 +411,17 @@ class UniAppSystem:
                 subjects_by_grade[grade].append((student, subject))
 
         # Display subjects grouped by grade
-        for grade, subjects in subjects_by_grade.items():
+        for grade in grades_order:
+            subjects = subjects_by_grade[grade]
             if subjects:
                 tk.Label(group_by_grade_window, text=f"Subjects with grade {grade}:", font=("Arial", 12, "bold")).pack(pady=5)
                 for student, subject in subjects:
                     student_info = f"Student: {student.first_name} {student.last_name}, Email: {student.email}, Subject: {subject.id}, Subject Mark: {subject.mark}"
                     tk.Label(group_by_grade_window, text=student_info).pack(pady=2)
+            else:
+                tk.Label(group_by_grade_window, text=f"Subjects with grade {grade}:", font=("Arial", 12, "bold")).pack(pady=5)
+                tk.Label(group_by_grade_window, text="<Nothing to display>").pack(pady=2)
+
 
     def partition_students(self):
         partition_window = tk.Toplevel(self.root)
@@ -376,45 +439,66 @@ class UniAppSystem:
             else:
                 failed_students.append(student)
 
-        tk.Label(partition_window, text="Passed Students:", font=("Arial", 12, "bold")).pack(pady=5)
-        for student in passed_students:
-            total_marks = sum(subject.mark for subject in student.enrolled_subjects)
-            average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
-            student_info = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
-            tk.Label(partition_window, text=student_info).pack(pady=2)
+        if passed_students:
+            tk.Label(partition_window, text="Passed Students:", font=("Arial", 12, "bold")).pack(pady=5)
+            for student in passed_students:
+                total_marks = sum(subject.mark for subject in student.enrolled_subjects)
+                average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
+                student_info = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
+                tk.Label(partition_window, text=student_info).pack(pady=2)
+        else:
+            tk.Label(partition_window, text="Passed Students:", font=("Arial", 12, "bold")).pack(pady=5)
+            tk.Label(partition_window, text="<Nothing to display>").pack(pady=2)
 
-        tk.Label(partition_window, text="Failed Students:", font=("Arial", 12, "bold")).pack(pady=5)
-        for student in failed_students:
-            total_marks = sum(subject.mark for subject in student.enrolled_subjects)
-            average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
-            student_info = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
-            tk.Label(partition_window, text=student_info).pack(pady=2)
+        if failed_students:
+            tk.Label(partition_window, text="Failed Students:", font=("Arial", 12, "bold")).pack(pady=5)
+            for student in failed_students:
+                total_marks = sum(subject.mark for subject in student.enrolled_subjects)
+                average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
+                student_info = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
+                tk.Label(partition_window, text=student_info).pack(pady=2)
+        else:
+            tk.Label(partition_window, text="Failed Students:", font=("Arial", 12, "bold")).pack(pady=5)
+            tk.Label(partition_window, text="<Nothing to display>").pack(pady=2)
 
     def remove_student(self):
         remove_student_window = tk.Toplevel(self.root)
         remove_student_window.title("Remove Student")
 
-        tk.Label(remove_student_window, text="Enter student email to remove:", font=("Arial", 12)).pack(pady=5)
-        email_entry = tk.Entry(remove_student_window)
-        email_entry.pack(pady=5)
+        with open('students.data', 'r') as file:
+            students = json.load(file)
+
+        list_ids = []
+        for student1 in students:
+            list_ids.append(student1['id'])
+            
+
+        tk.Label(remove_student_window, text=f"Student ID's in system {list_ids}\n Enter student id to remove:", font=("Arial", 12)).pack(pady=5)
+        id_entry = tk.Entry(remove_student_window)
+        id_entry.pack(pady=5)
 
         def remove():
-            email = email_entry.get().strip()
-            
-            with open('students.data', 'r') as file:
-                    students = json.load(file)
+            id = id_entry.get().strip()
 
-                    for student in students:
-                        if student['email'] == email:
-                          students.remove(student)
-                          messagebox.showinfo("Success", "Student removed from system.")
-                          break  # Exit loop after first match assuming emails are unique
-                        else:
-                          messagebox.showinfo("Error", "Student not found")
-                      
-                    # Step 3: Write the modified data structure back to the JSON file
-                    with open('students.data', 'w') as file:
-                        json.dump(students, file, indent=4) 
+            with open('students.data', 'r') as file:
+                students = json.load(file)
+
+            list_ids = []
+            for student1 in students:
+                list_ids.append(student1['id'])
+            
+            for student1 in students:
+                if student1['id'] == id:
+                    students.remove(student1)
+                    messagebox.showinfo("Success", "Student has been removed successfully.")
+                break
+            
+            if id not in list_ids:
+                messagebox.showerror("Error", "Student not found in database. Please try again.")  
+                
+            # Write the modified data back to the original file
+            with open('students.data', 'w') as file:
+                json.dump(students, file, indent=4) 
                     
 
         tk.Button(remove_student_window, text="Remove", command=remove).pack(pady=5)
