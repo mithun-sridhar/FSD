@@ -3,6 +3,7 @@ import random
 import re
 import json
 import sys
+from collections import defaultdict
 
 
 # ANSI color codes
@@ -128,11 +129,17 @@ class UniAppSystem:
      pass
 
   
-  def student_login(self, email, password, students):
+  def student_login(self, email, password):
+    try:
+      with open('students.data', 'r') as file:
+        students = json.load(file)
+    except FileNotFoundError:
+      return []
+    
     # Iterate through each student's data in the file
     for student in students:
         # Check if the email and password match
-        if student.email == email and student.password == password:
+        if student['email'] == email and student['password'] == password:
             return student  # Credentials match
     return None  # No match found
     
@@ -153,7 +160,7 @@ class UniAppSystem:
                 print(colors.GREEN + "Student Login" + colors.RESET)
                 email = input("Enter email: ").lower()
                 password = input("Enter password: ")
-                student = self.student_login(email, password, students)
+                student = self.student_login(email, password)
                 if student:
                   print(colors.YELLOW + "Login successful. Transferring to student course menu." + colors.RESET)
                   self.student_course_menu(student)
@@ -204,57 +211,86 @@ class UniAppSystem:
         match choice:
             # enrol into subject
             case 'e':
-                if len(student.enrolled_subjects) < 4:
-                    subject_enrolled = Subject()
-                    student.enrolled_subjects.append(subject_enrolled)
-                    num_enrolled = len(student.enrolled_subjects)
-                    print(colors.YELLOW + f"Enrolled successfully into subject {subject_enrolled.id}" + colors.RESET)
-                    print(colors.GREEN + f"You are now enrolled in {num_enrolled} out of 4 subjects." + colors.RESET)
-                else:
-                    print(colors.RED + "Maximum enrolment reached (4 subjects)" + colors.RESET)
-                
+              try:
+                with open('students.data', 'r') as file:
+                  students = json.load(file)
+              except FileNotFoundError:
+                return []
+              
+              student1 = next((s for s in students if s['id'] == student['id']), None)
+              
+              if len(student1['enrolled_subjects']) < 4:
+                new_subject = Subject()
+                student1['enrolled_subjects'].append({
+                    "subject_id": new_subject.id,
+                    "mark": new_subject.mark,
+                    "grade": new_subject.grade
+                })
+                num_enrolled = len(student1['enrolled_subjects'])
+                print(colors.YELLOW + f"Enrolled successfully into subject {new_subject.id}" + colors.RESET)
+                print(colors.GREEN + f"You are now enrolled in {num_enrolled} out of 4 subjects." + colors.RESET)
+              else:
+                print(colors.RED + "Maximum enrolment reached (4 subjects)" + colors.RESET)
+
+              # Save the updated student data to the file
+              with open('students.data', 'w') as file:
+                json.dump(students, file, indent=4)
+              
 
             # remove subject
             case 'r':
-                if student.enrolled_subjects:
-                    print(colors.GREEN + "Remove Subject from Enrollment" + colors.RESET)
-
-                    with open('students.data', 'r') as file:
-                      students1 = json.load(file)
-
-                    list_ids = []
-                    for student in students1:
-                       for subject in student:
-                        list_ids.append(subject['subject_id'])
-                    
-                    print(colors.MAGENTA + f"Subject ID's in enrollment: {list_ids}" + colors.RESET)
-
-                    id_remove = input("Enter subject id to remove: ")
-                    
-                    if id_remove not in list_ids:
-                      print(colors.RED + "Subject not found in student's enrolment list. Please try again." + colors.RESET)  
-                    
-                    for student in students:
-                      for subject in student:
-                        if subject['subject_id'] == id_remove:
-                          student.remove(subject)
-                          print(colors.YELLOW + f"Subject {id_remove} has been removed successfully." + colors.RESET)
-                          break
-                      
-
-                    # Write the modified data back to the original file
-                    with open('students.data', 'w') as file:
-                        json.dump(students, file, indent=4)
+                try:
+                  with open('students.data', 'r') as file:
+                      students_data = json.load(file)
+                except FileNotFoundError:
+                    print(colors.RED + "File not found error. Please try again." + colors.RESET)
+                    return
                 
+                list_ids = []
+                for student1 in students_data:
+                  if student1['id'] == student['id']:
+                    for subject in student1['enrolled_subjects']:
+                        list_ids.append(subject['subject_id'])
+                
+                print(colors.MAGENTA + f"Subject ID's in enrollment: {list_ids}" + colors.RESET)
+
+                id_remove = input("Enter subject id to remove: ")
+
+                for student2 in students_data:
+                    if student2['id'] == student['id']:
+                        enrolled_subjects = student2.get('enrolled_subjects', [])
+                        for subject in enrolled_subjects:
+                            if subject['subject_id'] == id_remove:
+                                enrolled_subjects.remove(subject)
+                                print(colors.YELLOW + f"Subject {id_remove} has been removed successfully." + colors.RESET)
+                                break
+                        else:
+                            print(colors.RED + "Subject not found in student's enrollment list. Please try again." + colors.RESET)
+                        break
+                else:
+                    print(colors.RED + f"Student with ID {student['id']} not found." + colors.RESET)
+
+                with open('students.data', 'w') as file:
+                    json.dump(students_data, file, indent=4)
+                              
 
             # show enrolment
             case 's':
-                if student.enrolled_subjects:
-                    print(colors.GREEN + "\nEnrolled Subjects:" + colors.RESET)
-                    for i, subject in enumerate(student.enrolled_subjects):
-                        print(f"{i+1}. Subject ID: {subject.id}, Mark: {subject.mark}, Grade: {subject.grade}")
-                else:
-                    print(colors.YELLOW + "Showing 0 subjects - no subjects enrolled" + colors.RESET)
+                try:
+                  with open('students.data', 'r') as file:
+                    students = json.load(file)
+                except FileNotFoundError:
+                  return []
+                
+                student1 = next((s for s in students if s['id'] == student['id']), None)
+
+                for student1 in students:
+                  if len(student1['enrolled_subjects']) > 0 and student1['id'] == student['id']:
+                      print(colors.GREEN + "\nEnrolled Subjects:" + colors.RESET)
+                      for i, subject in enumerate(student1['enrolled_subjects']):
+                          print(f"{i+1}. Subject ID: {subject['subject_id']}, Mark: {subject['mark']}, Grade: {subject['grade']}")
+                  elif len(student1['enrolled_subjects']) == 0 and student1['id'] == student['id']:
+                      print(colors.YELLOW + "Showing 0 subjects - no subjects enrolled" + colors.RESET)
                 
             # change password
             case 'c':
@@ -266,65 +302,97 @@ class UniAppSystem:
                      continue
                   else:
                      break
-                if student.is_valid_password(new_password):
-                    student.password = new_password
-                    print(colors.GREEN + "Password changed successfully!" + colors.RESET)
+  
+                try:
+                  with open('students.data', 'r') as file:
+                    students = json.load(file)
+                except FileNotFoundError:
+                  print("File not found error. Please check the file path.")
+                  return
+                
+                # creating an empty instance of the object student so we can use the is_valid_password function
+                function = Student(None, None, None, None)
+
+                # Find the student with the specified ID
+                for student1 in students:
+                    if student1['id'] == student['id'] and function.is_valid_password(new_password):
+                        # Update the password
+                        student1['password'] = new_password
+                        print(colors.GREEN + f"Password updated successfully." + colors.RESET)
+                        break
                 else:
                     print(colors.RED + "Invalid password format! Please try again." + colors.RESET)
                     print(colors.MAGENTA + "Note: Password must have at least 6 characters total, beginning with an uppercase, and last three characters must be digits." + colors.RESET)
-                
+
+                # Save the modified data back to the file
+                with open('students.data', 'w') as file:
+                    json.dump(students, file, indent=4)
 
             # exit system
             case 'x':
                 print(colors.YELLOW + "Logged out!" + colors.RESET)
-                return
+                self.student_menu(students)
 
             case _:
                 print(colors.RED + "Invalid choice, please try again." + colors.RESET)
 
           
-  def group_by_grade(self, students):
+  def group_by_grade(self):
 
-    
-    subjects_by_grade = []
-
-    subjects_by_grade = {"HD": [], "D": [], "C": [], "P": [], "Z": []}
-
-    # Group subjects by grade
-    for student in students:
-        for subject in student.enrolled_subjects:
-            grade = subject.grade
-            subjects_by_grade[grade].append(subject)
-    
-    # Print if there are no students
-    try:
-      with open('students.data', 'r') as file:
-        students1 = json.load(file)
-    except FileNotFoundError:
-      print(colors.RED + "File not found error --> file has been created, please login to system again." + colors.RESET)
-      return []
-       
-    if len(students1) == 0:
-       print("\t<Nothing to display>")
-
-    # Print subjects grouped by grade
-    for grade, subjects in subjects_by_grade.items():
-        if subjects:
-            print("\n")
-            print(colors.YELLOW + f"Subjects with grade {grade}:" + colors.RESET)
-            for subject in subjects:
-                print(f"Student: {student.first_name} {student.last_name}, Email: {student.email}, Subject: {subject.id}, Subject Mark: {subject.mark}")
+      students1 = []
       
+      # Print if there are no students
+      try:
+          with open('students.data', 'r') as file:
+              students1 = json.load(file)
+      except FileNotFoundError:
+          print(colors.RED + "File not found error --> file has been created, please login to system again." + colors.RESET)
+          return []
+
+      if len(students1) == 0:
+          print("\t<Nothing to display>")
+          return
+
+        # Group subjects by grade
+      subjects_by_grade = defaultdict(list)
+      for student in students1:
+          for subject in student['enrolled_subjects']:
+              grade = subject['grade']
+              subjects_by_grade[grade].append({
+                  "student_name": f"{student['first_name']} {student['last_name']}",
+                  "email": student['email'],
+                  "subject_id": subject['subject_id'],
+                  "mark": subject['mark']
+              })
+
+      # Define the custom order for grades
+      grade_order = ["HD", "D", "C", "P", "Z"]
+
+      # Print subjects grouped by grade in the custom order
+      for grade in grade_order:
+          if grade in subjects_by_grade and subjects_by_grade[grade]:
+              print("\n")
+              print(colors.YELLOW + f"Subjects with grade {grade}:" + colors.RESET)
+              for subject in subjects_by_grade[grade]:
+                  print(f"Student: {subject['student_name']}, Email: {subject['email']}, Subject: {subject['subject_id']}, Subject Mark: {subject['mark']}")
 
 
-  def partition_pass_fail(self, students):
+
+  def partition_pass_fail(self):
 
     passed_students = []
     failed_students = []
 
+    try:
+      with open('students.data', 'r') as file:
+        students = json.load(file)
+    except FileNotFoundError:
+      print(colors.RED + "File not found error --> file has been created, please login to system again." + colors.RESET)
+      return []
+
     for student in students:
-        total_marks = sum(subject.mark for subject in student.enrolled_subjects)
-        average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
+        total_marks = sum(subject['mark'] for subject in student['enrolled_subjects'])
+        average_score = total_marks / len(student['enrolled_subjects']) if student['enrolled_subjects'] else 0
 
         if average_score >= 50:
             passed_students.append(student)
@@ -334,42 +402,38 @@ class UniAppSystem:
     print(colors.YELLOW + "\nPASS:" + colors.RESET)
     if len(passed_students) == 0:
            print("\t<Nothing to display>")
-    # Create a set to store unique student names
-    student_names = set()
+    # Create a set to store unique student names who passed
+    student_names_passed = set()
 
     for student in passed_students:
-        total_marks = sum(subject.mark for subject in student.enrolled_subjects)
-        average_score = total_marks / len(student.enrolled_subjects) if student.enrolled_subjects else 0
-        name = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
-        student_names.add(name)
+        total_marks = sum(subject['mark'] for subject in student['enrolled_subjects'])
+        average_score = total_marks / len(student['enrolled_subjects']) if student['enrolled_subjects'] else 0
+        name = f"ID: {student['id']} {student['first_name']} {student['last_name']}, GPA: {average_score:.2f}"
+        student_names_passed.add(name)
         
 
     # Print each unique student name
-    for name in student_names:
+    for name in student_names_passed:
         print(f"- {name}")
-
     
-    # Create a set to store unique student names - clear out old set
-    student_names = set()
-
-    for student in failed_students:
-        total_marks = sum(subject.mark for subject in student.enrolled_subjects)
-        average_score = total_marks / len(student["enrolled_subjects"]) if student.enrolled_subjects else 0
-        name = f"ID: {student.id} {student.first_name} {student.last_name}, GPA: {average_score}"
-        student_names.add(name)
-
     print(colors.YELLOW + "\nFAIL:" + colors.RESET)
     if len(failed_students) == 0:
-       print("\t<Nothing to display>")
-    for student in failed_students:
-      if average_score == 0:
-          print("\t<Nothing to Display>")
-          break
-      else:
-         # Print each unique student name
-        for name in student_names:
+        print("\t<Nothing to display>")
+    else:
+        # Create a set to store unique student names who failed
+        student_names_failed = set()
+        for student in failed_students:
+            total_marks = sum(subject['mark'] for subject in student['enrolled_subjects'])
+            average_score = total_marks / len(student["enrolled_subjects"]) if student['enrolled_subjects'] else 0
+            name = f"ID: {student['id']} {student['first_name']} {student['last_name']}, GPA: {average_score:.2f}"
+            student_names_failed.add(name)
+
+        # Print each unique student name
+        for name in student_names_failed:
             print(f"- {name}")
-         
+
+    
+
         
         
 
@@ -399,16 +463,16 @@ class UniAppSystem:
                     print(colors.YELLOW + "\nAll Students:" + colors.RESET)
                     for student in students1:
                         print(f"ID: {student['id']}, Name: {student['first_name']} {student['last_name']}, Email: {student['email']}")
-                    if len(students) == 0:
+                    if len(students1) == 0:
                       print("\t<Nothing to display>")
 
                 # group students by grade
                 case 'g':
-                    self.group_by_grade(students)
+                    self.group_by_grade()
 
                 # partition students by pass/fail category
                 case 'p':
-                    self.partition_pass_fail(students)
+                    self.partition_pass_fail()
 
                 # remove a student
                 case 'r':
